@@ -5,6 +5,8 @@
 #else
 #define JEP_UTILS_API __declspec(dllimport)
 #endif
+#elif defined(__linux__)
+#define JEP_UTILS_API
 #endif
 
 /**
