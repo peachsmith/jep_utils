@@ -1,7 +1,7 @@
 .vs/
 Release/
 Debug/
-jep_utils.so
+libjep_utils.so
 jep_utils.dylib
 jep_utils.dll
 
