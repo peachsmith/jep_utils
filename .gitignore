@@ -2,6 +2,6 @@
 Release/
 Debug/
 libjep_utils.so
-jep_utils.dylib
+libjep_utils.dylib
 jep_utils.dll
 
