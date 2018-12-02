@@ -7,6 +7,8 @@
 #endif
 #elif defined(__linux__)
 #define JEP_UTILS_API
+#elif defined(__APPLE__)
+#define JEP_UTILS_API
 #endif
 
 /**
