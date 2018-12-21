@@ -62,3 +62,18 @@ jep_destroy_byte_buffer(jep_byte_buffer* bb);
  */
 JEP_UTILS_API int JEP_UTILS_CALL
 jep_append_byte(jep_byte_buffer* bb, unsigned char b);
+
+/**
+ * Appends a byte to a byte buffer.
+ * Returns the number of bytes added.
+ *
+ * Params:
+ *   jep_byte_buffer - the byte buffer to receive the new byte
+ *   unsigned char* - a pointer to an array of bytes
+ *   int - the number of bytes to append
+ *
+ * Returns:
+ *   int - an integer indicating the number of bytes added
+ */
+JEP_UTILS_API int JEP_UTILS_CALL
+jep_append_bytes(jep_byte_buffer* bb, unsigned char* b, int n);

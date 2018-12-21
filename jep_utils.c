@@ -11,9 +11,11 @@ jep_create_byte_buffer()
 	if (bb == NULL)
 		return NULL;
 
-	bb->cap = 50;
+	size_t cap = 50;
+
+	bb->cap = cap;
 	bb->size = 0;
-	bb->buffer = (unsigned char*)malloc(sizeof(unsigned char));
+	bb->buffer = (unsigned char*)malloc(sizeof(unsigned char) * cap);
 
 	if (bb->buffer == NULL)
 	{
@@ -54,4 +56,15 @@ jep_append_byte(jep_byte_buffer* bb, unsigned char b)
 	bb->buffer[bb->size++] = b;
 
 	return 1;
+}
+
+JEP_UTILS_API int JEP_UTILS_CALL
+jep_append_bytes(jep_byte_buffer* bb, unsigned char* b, int n)
+{
+	int i, result = 0;
+
+	for (i = 0; i < n; i++)
+		result += jep_append_byte(bb, b[i]);
+
+	return result;
 }
