@@ -50,12 +50,17 @@ jep_append_byte(jep_byte_buffer* bb, unsigned char b)
 
 	if (bb->size >= bb->cap)
 	{
-		size_t new_size = bb->size + bb->size / 2;
-		bb->buffer = (unsigned char*)realloc(bb->buffer, new_size);
+		size_t new_cap = bb->size + bb->size / 2;
+		bb->buffer = (unsigned char*)realloc(bb->buffer, new_cap);
+		bb->cap = new_cap;
 	}
 
 	if (bb->buffer == NULL)
+	{
+		bb->cap = 0;
+		bb->size = 0;
 		return 0;
+	}
 
 	bb->buffer[bb->size++] = b;
 
@@ -124,12 +129,17 @@ jep_append_char(jep_char_buffer* cb, char c)
 
 	if (cb->size >= cb->cap)
 	{
-		size_t new_size = cb->size + cb->size / 2;
-		cb->buffer = (char*)realloc(cb->buffer, new_size);
+		size_t new_cap = cb->size + cb->size / 2;
+		cb->buffer = (char*)realloc(cb->buffer, new_cap);
+		cb->cap = new_cap;
 	}
 
 	if (cb->buffer == NULL)
+	{
+		cb->cap = 0;
+		cb->size = 0;
 		return 0;
+	}
 
 	cb->buffer[cb->size++] = c;
 

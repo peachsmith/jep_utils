@@ -1,6 +1,8 @@
 /**
  * The main header file for jep_utils
  */
+#ifndef JEP_UTILS_H
+#define JEP_UTILS_H
 
 #include <stdlib.h>
 
@@ -142,3 +144,5 @@ jep_append_char(jep_char_buffer* bb, char b);
  */
 JEP_UTILS_API int JEP_UTILS_CALL
 jep_append_chars(jep_char_buffer* bb, char* b, int n);
+
+#endif
