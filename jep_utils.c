@@ -43,7 +43,7 @@ jep_destroy_byte_buffer(jep_byte_buffer* bb)
 }
 
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_append_byte(jep_byte_buffer* bb, unsigned char b)
+jep_append_byte(jep_byte_buffer * bb, unsigned char b)
 {
 	if (bb == NULL || bb->buffer == NULL)
 		return 0;
@@ -73,12 +73,19 @@ jep_append_byte(jep_byte_buffer* bb, unsigned char b)
 }
 
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_append_bytes(jep_byte_buffer* bb, unsigned char* b, int n)
+jep_append_bytes(jep_byte_buffer * bb, unsigned char* b, int n)
 {
 	int i, result = 0;
 
 	for (i = 0; i < n; i++)
-		result += jep_append_byte(bb, b[i]);
+	{
+		int next_result = jep_append_byte(bb, b[i]);
+		if (next_result > 0)
+			result += next_result;
+		else
+			return next_result;
+	}
+
 
 	return result;
 }
@@ -115,7 +122,7 @@ jep_create_char_buffer()
 }
 
 JEP_UTILS_API void JEP_UTILS_CALL
-jep_destroy_char_buffer(jep_char_buffer* cb)
+jep_destroy_char_buffer(jep_char_buffer * cb)
 {
 	if (cb == NULL)
 		return;
@@ -127,7 +134,7 @@ jep_destroy_char_buffer(jep_char_buffer* cb)
 }
 
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_append_char(jep_char_buffer* cb, char c)
+jep_append_char(jep_char_buffer * cb, char c)
 {
 	if (cb == NULL || cb->buffer == NULL)
 		return 0;
@@ -157,12 +164,19 @@ jep_append_char(jep_char_buffer* cb, char c)
 }
 
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_append_chars(jep_char_buffer* cb, char* c, int n)
+jep_append_chars(jep_char_buffer * cb, char* c, int n)
 {
 	int i, result = 0;
 
 	for (i = 0; i < n; i++)
-		result += jep_append_char(cb, c[i]);
+	{
+		int next_result = jep_append_char(cb, c[i]);
+		if (next_result > 0)
+			result += next_result;
+		else
+			return next_result;
+	}
+
 
 	return result;
 }
