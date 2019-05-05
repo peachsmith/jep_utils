@@ -203,7 +203,7 @@ jep_append_char(jep_char_buffer* cb, char c)
 	if (cb->size >= cb->cap)
 	{
 		size_t new_cap = cb->size + cb->size / 2;
-		unsigned char* buffer = (unsigned char*)realloc(cb->buffer, new_cap);
+		char* buffer = (char*)realloc(cb->buffer, new_cap);
 
 		if (buffer == NULL)
 			return -1;
