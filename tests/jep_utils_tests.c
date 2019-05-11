@@ -206,3 +206,55 @@ int jep_append_chars_tests(jep_char_buffer* cb)
 
 	return passed;
 }
+
+int jep_create_bitstring_test(jep_bitstring* bs)
+{
+	int passed = 0;
+
+	int bs_not_null = 0;
+	int bs_bytes_not_null = 0;
+	int bs_byte_count_0 = 0;
+	int bs_bit_count = 0;
+	int bs_current_bits = 0;
+
+	if (bs != NULL)
+	{
+		passed++;
+		bs_not_null = 1;
+	}
+
+	if (bs != NULL && bs->bytes != NULL)
+	{
+		passed++;
+		bs_bytes_not_null = 1;
+	}
+
+	if (bs != NULL && bs->bit_count == 0)
+	{
+		passed++;
+		bs_bit_count = 1;
+	}
+
+	if (bs != NULL && bs->byte_count == 1)
+	{
+		passed++;
+		bs_byte_count_0 = 1;
+	}
+
+	if (bs != NULL && bs->current_bits == 0)
+	{
+		passed++;
+		bs_current_bits = 1;
+	}
+
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf("jep_create_bitstring tests\n");
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf(JEP_TEST_REPORT_RESULT("bs != NULL", bs_not_null));
+	printf(JEP_TEST_REPORT_RESULT("bs->bytes != NULL", bs_bytes_not_null));
+	printf(JEP_TEST_REPORT_RESULT("bs->bit_count == 0", bs_byte_count_0));
+	printf(JEP_TEST_REPORT_RESULT("bs->byte_count == 1", bs_bit_count));
+	printf(JEP_TEST_REPORT_RESULT("bs->current_bits == 0", bs_current_bits));
+
+	return passed;
+}

@@ -14,7 +14,7 @@
 #include <string.h>
 
 #define JEP_TEST_BUFFER_SIZE 50
-#define JEP_TEST_EXPECTED 16
+#define JEP_TEST_EXPECTED 21
 #define JEP_TEST_REPORT_SEPARATOR "-----------------------------------\n"
 #define JEP_TEST_REPORT_RESULT(a, b) "%-28s [%-4s]\n", a, (b ? "PASS" : "FAIL")
 
@@ -99,5 +99,21 @@ int jep_append_char_tests(jep_char_buffer* cb);
  *   int - the number of successful assertions
  */
 int jep_append_chars_tests(jep_char_buffer* cb);
+
+/**
+ * Performs the following 5 assertions:
+ * 1. bs != null
+ * 2. bs->bytes != null
+ * 3. bs->byte_count == 1
+ * 4. bs->bit_count = 0
+ * 5. bs->current_bits = 0
+ * 
+ * Params:
+ *   jep_bitstring - a bitstring
+ * 
+ * Returns:
+ *   int - the number of successful assertions
+ */
+int jep_create_bitstring_test(jep_bitstring* bs);
 
 #endif

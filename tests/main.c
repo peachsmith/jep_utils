@@ -22,9 +22,15 @@ int main(int argc, char** argv)
 	int create_char_buffer_passes = 0;
 	int append_char_passes = 0;
 	int append_chars_passes = 0;
+	int create_bitstring_passes = 0;
+	int append_bit_passes = 0;
+	int append_bits_passes = 0;
+	int get_bit_passes = 0;
+	int set_bit_passes = 0;
 
 	jep_byte_buffer* bb;
 	jep_char_buffer* cb;
+	jep_bitstring* bs;
 
 	for (i = 0; i < JEP_TEST_BUFFER_SIZE; i++)
 	{
@@ -34,6 +40,7 @@ int main(int argc, char** argv)
 
 	bb = jep_create_byte_buffer();
 	cb = jep_create_char_buffer();
+	bs = jep_create_bitstring();
 
 
 	/* ------------------------------------------------- */
@@ -67,6 +74,10 @@ int main(int argc, char** argv)
 	jep_append_chars(cb, test_chars, JEP_TEST_BUFFER_SIZE);
 	append_chars_passes = jep_append_chars_tests(cb);
 
+	/* ------------------------------------------------- */
+	/*               jep_bitstring tests                 */
+	/* ------------------------------------------------- */
+	create_bitstring_passes = jep_create_bitstring_test(bs);
 
 	/* ------------------------------------------------- */
 	/*                     cleanup                       */
@@ -83,6 +94,11 @@ int main(int argc, char** argv)
 	passes += create_byte_buffer_passes;
 	passes += append_byte_passes;
 	passes += append_bytes_passes;
+	passes += create_bitstring_passes;
+	passes += append_bit_passes;
+	passes += append_bits_passes;
+	passes += get_bit_passes;
+	passes += set_bit_passes;
 
 	printf(JEP_TEST_REPORT_SEPARATOR);
 	printf("Final Results: %d/%d tests passed\n", passes, JEP_TEST_EXPECTED);
