@@ -6,7 +6,7 @@
 
 #include "jep_utils_tests.h"
 
-int jep_create_byte_buffer_tests(jep_byte_buffer* bb)
+int jep_create_byte_buffer_tests(jep_byte_buffer *bb)
 {
 	int passed = 0;
 
@@ -47,11 +47,10 @@ int jep_create_byte_buffer_tests(jep_byte_buffer* bb)
 	printf(JEP_TEST_REPORT_RESULT("bb->size == 0", bb_size_0));
 	printf(JEP_TEST_REPORT_RESULT("bb->cap == 50", bb_cap_50));
 
-
 	return passed;
 }
 
-int jep_append_byte_tests(jep_byte_buffer* bb)
+int jep_append_byte_tests(jep_byte_buffer *bb)
 {
 	int passed = 0;
 
@@ -79,7 +78,7 @@ int jep_append_byte_tests(jep_byte_buffer* bb)
 	return passed;
 }
 
-int jep_append_bytes_tests(jep_byte_buffer* bb)
+int jep_append_bytes_tests(jep_byte_buffer *bb)
 {
 	int passed = 0;
 
@@ -107,7 +106,7 @@ int jep_append_bytes_tests(jep_byte_buffer* bb)
 	return passed;
 }
 
-int jep_create_char_buffer_tests(jep_char_buffer* cb)
+int jep_create_char_buffer_tests(jep_char_buffer *cb)
 {
 	int passed = 0;
 
@@ -151,7 +150,7 @@ int jep_create_char_buffer_tests(jep_char_buffer* cb)
 	return passed;
 }
 
-int jep_append_char_tests(jep_char_buffer* cb)
+int jep_append_char_tests(jep_char_buffer *cb)
 {
 	int passed = 0;
 
@@ -179,7 +178,7 @@ int jep_append_char_tests(jep_char_buffer* cb)
 	return passed;
 }
 
-int jep_append_chars_tests(jep_char_buffer* cb)
+int jep_append_chars_tests(jep_char_buffer *cb)
 {
 	int passed = 0;
 
@@ -207,7 +206,7 @@ int jep_append_chars_tests(jep_char_buffer* cb)
 	return passed;
 }
 
-int jep_create_bitstring_test(jep_bitstring* bs)
+int jep_create_bitstring_tests(jep_bitstring *bs)
 {
 	int passed = 0;
 
@@ -255,6 +254,118 @@ int jep_create_bitstring_test(jep_bitstring* bs)
 	printf(JEP_TEST_REPORT_RESULT("bs->bit_count == 0", bs_byte_count_0));
 	printf(JEP_TEST_REPORT_RESULT("bs->byte_count == 1", bs_bit_count));
 	printf(JEP_TEST_REPORT_RESULT("bs->current_bits == 0", bs_current_bits));
+
+	return passed;
+}
+
+int jep_add_bit_tests(jep_bitstring *bs)
+{
+	int passed = 0;
+
+	int bs_bit_count_1 = 0;
+	int bs_current_bits_1 = 0;
+
+	if (bs != NULL && bs->bit_count == 1)
+	{
+		passed++;
+		bs_bit_count_1 = 1;
+	}
+
+	if (bs != NULL && bs->current_bits == 1)
+	{
+		passed++;
+		bs_current_bits_1 = 1;
+	}
+
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf("jep_add_bit tests\n");
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf(JEP_TEST_REPORT_RESULT("bs->bit_count == 1", bs_bit_count_1));
+	printf(JEP_TEST_REPORT_RESULT("bs->current_bits == 1", bs_current_bits_1));
+
+	return passed;
+}
+
+int jep_add_bits_tests(jep_bitstring *bs)
+{
+	int passed = 0;
+
+	int bs_bit_count_9 = 0;
+	int bs_current_bits_1 = 0;
+	int bs_byte_count_2 = 0;
+
+	if (bs != NULL && bs->bit_count == 9)
+	{
+		passed++;
+		bs_bit_count_9 = 1;
+	}
+
+	if (bs != NULL && bs->current_bits == 1)
+	{
+		passed++;
+		bs_current_bits_1 = 1;
+	}
+
+	if (bs != NULL && bs->byte_count == 2)
+	{
+		passed++;
+		bs_byte_count_2 = 1;
+	}
+
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf("jep_add_bits tests\n");
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf(JEP_TEST_REPORT_RESULT("bs->bit_count == 9", bs_bit_count_9));
+	printf(JEP_TEST_REPORT_RESULT("bs->current_bits == 1", bs_current_bits_1));
+	printf(JEP_TEST_REPORT_RESULT("bs->byte_count == 2", bs_byte_count_2));
+
+	return passed;
+}
+
+int jep_get_bit_tests(int bit_a, int bit_b)
+{
+	int passed = 0;
+
+	int bit_a_0 = 0;
+	int bit_b_1 = 0;
+
+	if (bit_a == 0)
+	{
+		passed++;
+		bit_a_0 = 1;
+	}
+
+	if (bit_b == 1)
+	{
+		passed++;
+		bit_b_1 = 1;
+	}
+
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf("jep_get_bit tests\n");
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf(JEP_TEST_REPORT_RESULT("bit_a == 0", bit_a_0));
+	printf(JEP_TEST_REPORT_RESULT("bit_b == 1", bit_b_1));
+
+	return passed;
+}
+
+int jep_set_bit_tests(int bit)
+{
+	int passed = 0;
+
+	int bit_1 = 0;
+
+	if (bit == 1)
+	{
+		passed++;
+		bit_1 = 1;
+	}
+
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf("jep_set_bit tests\n");
+	printf(JEP_TEST_REPORT_SEPARATOR);
+	printf(JEP_TEST_REPORT_RESULT("bit == 1", bit_1));
 
 	return passed;
 }

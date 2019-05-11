@@ -14,7 +14,7 @@
 #include <string.h>
 
 #define JEP_TEST_BUFFER_SIZE 50
-#define JEP_TEST_EXPECTED 21
+#define JEP_TEST_EXPECTED 29
 #define JEP_TEST_REPORT_SEPARATOR "-----------------------------------\n"
 #define JEP_TEST_REPORT_RESULT(a, b) "%-28s [%-4s]\n", a, (b ? "PASS" : "FAIL")
 
@@ -114,6 +114,59 @@ int jep_append_chars_tests(jep_char_buffer* cb);
  * Returns:
  *   int - the number of successful assertions
  */
-int jep_create_bitstring_test(jep_bitstring* bs);
+int jep_create_bitstring_tests(jep_bitstring* bs);
+
+/**
+ * Performs the following 2 assertion:
+ * 1. bs->bit_count == 1
+ * 2. bs->current_bits == 1
+ * 
+ * Params:
+ *   jep_bitstring - a bitstring
+ * 
+ * Returns:
+ *   int - the number of successful assertions
+ */
+int jep_add_bit_tests(jep_bitstring* bs);
+
+/**
+ * Performs the following 3 assertion:
+ * 1. bs->bit_count == 9
+ * 2. bs->current_bits == 1
+ * 3. bs->byte_count == 2
+ * 
+ * Params:
+ *   jep_bitstring - a bitstring
+ * 
+ * Returns:
+ *   int - the number of successful assertions
+ */
+int jep_add_bits_tests(jep_bitstring* bs);
+
+/**
+ * Performs the following 2 assertions:
+ * 1. bit_a == 0
+ * 2. bit_b == 1
+ * 
+ * Params:
+ *   int - an integer containing a bit value
+ *   int - an integer containing a bit value
+ * 
+ * Returns:
+ *   int - the number of successful assertions
+ */
+int jep_get_bit_tests(int bit_a, int bit_b);
+
+/**
+ * Performs the following assertion:
+ * bit == 1
+ * 
+ * Params:
+ *   int - an integer containing a bit value
+ * 
+ * Returns:
+ *   int - the number of successful assertions
+ */
+int jep_set_bit_tests(int bit);
 
 #endif

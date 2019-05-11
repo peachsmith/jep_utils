@@ -6,7 +6,7 @@
 
 #include "jep_utils_tests.h"
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
 	int i;
 
@@ -28,9 +28,10 @@ int main(int argc, char** argv)
 	int get_bit_passes = 0;
 	int set_bit_passes = 0;
 
-	jep_byte_buffer* bb;
-	jep_char_buffer* cb;
-	jep_bitstring* bs;
+	jep_byte_buffer *bb;
+	jep_char_buffer *cb;
+	jep_bitstring *bs;
+	jep_bitstring *bs_2;
 
 	for (i = 0; i < JEP_TEST_BUFFER_SIZE; i++)
 	{
@@ -41,7 +42,7 @@ int main(int argc, char** argv)
 	bb = jep_create_byte_buffer();
 	cb = jep_create_char_buffer();
 	bs = jep_create_bitstring();
-
+	bs_2 = jep_create_bitstring();
 
 	/* ------------------------------------------------- */
 	/*             jep_byte_buffer tests                 */
@@ -57,7 +58,6 @@ int main(int argc, char** argv)
 	/* append multiple bytes */
 	jep_append_bytes(bb, test_bytes, JEP_TEST_BUFFER_SIZE);
 	append_bytes_passes = jep_append_bytes_tests(bb);
-
 
 	/* ------------------------------------------------- */
 	/*             jep_char_buffer tests                 */
@@ -77,13 +77,43 @@ int main(int argc, char** argv)
 	/* ------------------------------------------------- */
 	/*               jep_bitstring tests                 */
 	/* ------------------------------------------------- */
-	create_bitstring_passes = jep_create_bitstring_test(bs);
+	create_bitstring_passes = jep_create_bitstring_tests(bs);
+
+	jep_add_bit(bs, 1); /* 0 */
+
+	append_bit_passes = jep_add_bit_tests(bs);
+
+	jep_add_bit(bs_2, 0); /* 1 */
+	jep_add_bit(bs_2, 0);
+	jep_add_bit(bs_2, 0);
+	jep_add_bit(bs_2, 0);
+	jep_add_bit(bs_2, 0);
+	jep_add_bit(bs_2, 0);
+	jep_add_bit(bs_2, 1); /* 7 */
+	jep_add_bit(bs_2, 1);
+
+	jep_add_bits(bs, bs_2);
+
+	append_bits_passes = jep_add_bits_tests(bs);
+
+	int bit_a = jep_get_bit(bs, 6);
+	int bit_b = jep_get_bit(bs, 7);
+
+	get_bit_passes = jep_get_bit_tests(bit_a, bit_b);
+
+	jep_set_bit(bs, 1, 1);
+
+	int bit_c = jep_get_bit(bs, 1);
+
+	set_bit_passes = jep_set_bit_tests(bit_c);
 
 	/* ------------------------------------------------- */
 	/*                     cleanup                       */
 	/* ------------------------------------------------- */
 	jep_destroy_char_buffer(cb);
 	jep_destroy_byte_buffer(bb);
+	jep_destroy_bitstring(bs);
+	jep_destroy_bitstring(bs_2);
 
 	/* ------------------------------------------------- */
 	/*         tally and report the final results        */
