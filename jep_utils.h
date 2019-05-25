@@ -51,6 +51,39 @@ typedef struct jep_bitstring {
 	unsigned char current_bits;
 }jep_bitstring;
 
+typedef struct jep_huff_sym {
+	unsigned char b;     /* byte       */
+	unsigned long f;     /* frequency  */
+	unsigned long w;     /* weight     */
+	unsigned long n;     /* tree depth */
+	jep_bitstring* code; /* bit code   */
+}jep_huff_sym;
+
+typedef struct jep_huff_dict {
+	jep_huff_sym* symbols;
+	unsigned long count;
+}jep_huff_dict;
+
+typedef struct jep_huff_node {
+	jep_huff_sym sym;
+	struct jep_huff_node* leaf_1;
+	struct jep_huff_node* leaf_2;
+	struct jep_huff_node* next;
+	struct jep_huff_node* prev;
+}jep_huff_node;
+
+typedef struct jep_huff_tree {
+	unsigned long count;
+	jep_huff_node* nodes;
+	jep_huff_node* tail;
+}jep_huff_tree;
+
+typedef struct jep_huff_code {
+	jep_huff_tree* tree;
+	jep_huff_dict* dict;
+	jep_bitstring* data;
+}jep_huff_code;
+
 /* ------------------------------------------------- */
 /*                   byte buffer                     */
 /* ------------------------------------------------- */
@@ -275,5 +308,80 @@ jep_get_bit(jep_bitstring* bs, int index);
  */
 JEP_UTILS_API void JEP_UTILS_CALL
 jep_set_bit(jep_bitstring* bs, int index, unsigned int value);
+
+/**
+ * Removes the last bit from a bitstring.
+ * Returns 1 on success or 0 on failure.
+ *
+ * Params:
+ *   jep_bitstring - a bitstring
+ */
+JEP_UTILS_API int JEP_UTILS_CALL
+jep_pop_bit(jep_bitstring* bs);
+
+/* ------------------------------------------------- */
+/*                 Huffman Coding                    */
+/* ------------------------------------------------- */
+
+/**
+ * Encodes a series of bytes as a bitstring using Huffman Coding.
+ * Returns NULL on failure.
+ *
+ * Params:
+ *   jep_byte_buffer - a collection of unencoded bytes
+ *
+ * Returns:
+ *   huff_code - a Huffman Coding context containing encoded data
+ */
+JEP_UTILS_API jep_huff_code* JEP_UTILS_CALL
+jep_huff_encode(jep_byte_buffer* raw);
+
+/**
+ * Decodes a bitstring containing data encoded with Huffman Coding.
+ * Returns NULL on failure.
+ *
+ * Params:
+ *   huff_code - a Huffman Coding context containing encoded data
+ *
+ * Returns:
+ *   jep_byte_buffer - a collection of unencoded bytes
+ */
+JEP_UTILS_API jep_byte_buffer* JEP_UTILS_CALL
+jep_huff_decode(jep_huff_code* hc);
+
+/**
+ * Reads data encoded with Huffman Coding from a byte buffer.
+ *
+ * Params:
+ *   jep_byte_buffer - a collection of encoded bytes
+ *
+ * Returns:
+ *   huff_code - a Huffman Coding context or NULL on failure
+ */
+JEP_UTILS_API jep_huff_code* JEP_UTILS_CALL
+jep_read_huff_code_from_buffer(jep_byte_buffer* raw);
+
+/**
+ * Writes data encoded with Huffman Coding to a byte buffer.
+ * The data should be preceded by the bitcode dictionary.
+ *
+ * Params:
+ *   huff_code - a Huffman Coding context
+ *   jep_byte_buffer - a byte buffer
+ *
+ * Returns:
+ *   int - 1 on success or 0 on failure
+ */
+JEP_UTILS_API int JEP_UTILS_CALL
+jep_write_huff_code_to_buffer(jep_huff_code* hc, jep_byte_buffer* buffer);
+
+/**
+ * Frees the resources allocated for a Huffman Coding context.
+ *
+ * Params:
+ *   huff_code - a Huffman Coding context.
+ */
+JEP_UTILS_API void JEP_UTILS_CALL
+jep_destroy_huff_code(jep_huff_code* hc);
 
 #endif

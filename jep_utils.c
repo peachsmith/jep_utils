@@ -472,3 +472,30 @@ jep_set_bit(jep_bitstring* bs, int index, unsigned int value)
 		bit++;
 	}
 }
+
+JEP_UTILS_API int JEP_UTILS_CALL
+jep_pop_bit(jep_bitstring* bs)
+{
+	if (bs == NULL || bs->bit_count < 1)
+		return 0;
+
+	bs->bytes[bs->byte_count - 1] &= ~(1 << (bs->current_bits - 1));
+
+	bs->current_bits--;
+
+	if (bs->current_bits == 0 && bs->byte_count > 1)
+	{
+		unsigned char* bytes = (unsigned char*)realloc(bs->bytes, bs->byte_count - 1);
+
+		if (bytes == NULL)
+			return 0;
+
+		bs->bytes = bytes;
+		bs->byte_count--;
+		bs->current_bits = CHAR_BIT;
+	}
+
+	bs->bit_count--;
+
+	return 1;
+}
