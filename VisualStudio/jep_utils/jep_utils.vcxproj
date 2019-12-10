@@ -19,8 +19,13 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\bitstring.c" />
+    <ClCompile Include="..\..\byte_buffer.c" />
+    <ClCompile Include="..\..\char_buffer.c" />
     <ClCompile Include="..\..\huffman.c" />
-    <ClCompile Include="..\..\jep_utils.c" />
+    <ClCompile Include="..\..\json.c" />
+    <ClCompile Include="..\..\string.c" />
+    <ClCompile Include="..\..\unicode.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\jep_utils.h" />

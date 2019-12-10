@@ -1,19 +1,19 @@
-/**
- * Utilities for Huffman Coding
- */
 #include "jep_utils.h"
 
+// TODO: implement multibyte number I/O in a way that
+// is independent of endianness
 
 
 /*--------------------------------------------*/
 /*                 metadata                   */
 /*--------------------------------------------*/
-static const unsigned char dict_begin = 0x01;
-static const unsigned char dict_byte = 0x02;
-static const unsigned char dict_code = 0x03;
-static const unsigned char dict_end = 0x04;
-static const unsigned char data_begin = 0x05;
-static const unsigned char data_end = 0x06;
+static const jep_byte dict_begin = 0x01;
+static const jep_byte dict_byte = 0x02;
+static const jep_byte dict_code = 0x03;
+static const jep_byte dict_end = 0x04;
+static const jep_byte data_begin = 0x05;
+static const jep_byte data_end = 0x06;
+
 
 
 
@@ -79,6 +79,7 @@ static void destroy_tree(jep_huff_tree* tree);
  *   huff_code - a new Huffman Coding context.
  */
 static jep_huff_code* create_huff_code();
+
 
 
 
@@ -166,7 +167,7 @@ static int assign_bitcode(
  *   huff_node - a Huffman node
  *   jep_bitstring - a bitstring containing the bitcode for the current branch
  *   huff_sym - the raw data to be stored at the current node
- *   unsigned char - which byte in the bitstring is currently being used
+ *   jep_byte - which byte in the bitstring is currently being used
  *   unsigned long - which bit in the current byte is currently being used
  *   unsigned long - the number of branches traversed
  *
@@ -177,10 +178,11 @@ static int build_branch(
 	jep_huff_node** node,
 	jep_bitstring* bs,
 	jep_huff_sym data,
-	unsigned char byte,
+	jep_byte byte,
 	unsigned long bit,
 	unsigned long bit_count
 );
+
 
 
 
@@ -234,7 +236,7 @@ static void write_data_to_buffer(jep_bitstring* data, jep_byte_buffer* bb);
  * Reads bytes from a buffer.
  *
  * Params:
- *   unsigned char - a reference to memory to receive the bytes
+ *   jep_byte - a reference to memory to receive the bytes
  *   jep_byte_buffer - a buffer of bytes
  *   size_t - the number of bytes to read
  *   size_t - a reference to the position from which to start reading
@@ -242,13 +244,13 @@ static void write_data_to_buffer(jep_bitstring* data, jep_byte_buffer* bb);
  * Returns:
  *   int - 1 on success or 0 on failure
  */
-static int read_bytes_from_buffer(unsigned char* b, jep_byte_buffer* bb, size_t n, size_t* pos);
+static int read_bytes_from_buffer(jep_byte* b, jep_byte_buffer* bb, size_t n, size_t* pos);
 
 /**
  * Writes bytes to a buffer.
  *
  * Params:
- *   unsigned char - a reference to memory to supply the bytes
+ *   jep_byte - a reference to memory to supply the bytes
  *   jep_byte_buffer - a buffer of bytes
  *   size_t - the number of bytes to write
  *   size_t - a reference to the position from which to start writing
@@ -256,7 +258,8 @@ static int read_bytes_from_buffer(unsigned char* b, jep_byte_buffer* bb, size_t 
  * Returns:
  *   int - 1 on success or 0 on failure
  */
-static int write_bytes_to_buffer(const unsigned char* b, jep_byte_buffer* bb, size_t n, size_t* pos);
+static int write_bytes_to_buffer(const jep_byte* b, jep_byte_buffer* bb, size_t n, size_t* pos);
+
 
 
 
@@ -296,7 +299,7 @@ jep_huff_encode(jep_byte_buffer* raw)
 	/* prepare dictionary */
 	for (i = 0; i < UCHAR_MAX + 1; i++)
 	{
-		bytes[i].b = (unsigned char)i;
+		bytes[i].b = (jep_byte)i;
 		bytes[i].f = 0;
 		bytes[i].w = 0;
 		bytes[i].n = 1;
@@ -583,6 +586,7 @@ jep_destroy_huff_code(jep_huff_code* hc)
 
 	free(hc);
 }
+
 
 
 
@@ -944,28 +948,28 @@ static void write_dict_to_buffer(jep_huff_dict* dict, jep_byte_buffer* bb)
 
 	size_t pos = 0;
 
-	write_bytes_to_buffer(&dict_begin, bb, sizeof(unsigned char), &pos);
+	write_bytes_to_buffer(&dict_begin, bb, sizeof(jep_byte), &pos);
 
 	for (i = 0; i < dict->count; i++)
 	{
 		/* write the byte */
-		write_bytes_to_buffer(&dict_byte, bb, sizeof(unsigned char), &pos);
-		write_bytes_to_buffer(&(dict->symbols[i].b), bb, sizeof(unsigned char), &pos);
+		write_bytes_to_buffer(&dict_byte, bb, sizeof(jep_byte), &pos);
+		write_bytes_to_buffer(&(dict->symbols[i].b), bb, sizeof(jep_byte), &pos);
 
 		/* write the bit code metadata */
-		write_bytes_to_buffer(&dict_code, bb, sizeof(unsigned char), &pos);
-		write_bytes_to_buffer((unsigned char*)(&(dict->symbols[i].code->bit_count)), bb, sizeof(unsigned long), &pos);
-		write_bytes_to_buffer((unsigned char*)(&(dict->symbols[i].code->byte_count)), bb, sizeof(unsigned long), &pos);
-		write_bytes_to_buffer(&(dict->symbols[i].code->current_bits), bb, sizeof(unsigned char), &pos);
+		write_bytes_to_buffer(&dict_code, bb, sizeof(jep_byte), &pos);
+		write_bytes_to_buffer((jep_byte*)(&(dict->symbols[i].code->bit_count)), bb, sizeof(unsigned long), &pos);
+		write_bytes_to_buffer((jep_byte*)(&(dict->symbols[i].code->byte_count)), bb, sizeof(unsigned long), &pos);
+		write_bytes_to_buffer(&(dict->symbols[i].code->current_bits), bb, sizeof(jep_byte), &pos);
 
 		/* write the bit code data */
 		for (j = 0; j < dict->symbols[i].code->byte_count; j++)
 		{
-			write_bytes_to_buffer(&(dict->symbols[i].code->bytes[j]), bb, sizeof(unsigned char), &pos);
+			write_bytes_to_buffer(&(dict->symbols[i].code->bytes[j]), bb, sizeof(jep_byte), &pos);
 		}
 	}
 
-	write_bytes_to_buffer(&dict_end, bb, sizeof(unsigned char), &pos);
+	write_bytes_to_buffer(&dict_end, bb, sizeof(jep_byte), &pos);
 }
 
 static void write_data_to_buffer(jep_bitstring* data, jep_byte_buffer* bb)
@@ -974,20 +978,20 @@ static void write_data_to_buffer(jep_bitstring* data, jep_byte_buffer* bb)
 
 	size_t pos = 0;
 
-	write_bytes_to_buffer(&data_begin, bb, sizeof(unsigned char), &pos);
+	write_bytes_to_buffer(&data_begin, bb, sizeof(jep_byte), &pos);
 
 	/* write the bit string metadata */
-	write_bytes_to_buffer((unsigned char*)(&(data->bit_count)), bb, sizeof(unsigned long), &pos);
-	write_bytes_to_buffer((unsigned char*)(&(data->byte_count)), bb, sizeof(unsigned long), &pos);
-	write_bytes_to_buffer(&(data->current_bits), bb, sizeof(unsigned char), &pos);
+	write_bytes_to_buffer((jep_byte*)(&(data->bit_count)), bb, sizeof(unsigned long), &pos);
+	write_bytes_to_buffer((jep_byte*)(&(data->byte_count)), bb, sizeof(unsigned long), &pos);
+	write_bytes_to_buffer(&(data->current_bits), bb, sizeof(jep_byte), &pos);
 
 	/* write the bit code data */
 	for (i = 0; i < data->byte_count; i++)
 	{
-		write_bytes_to_buffer(&(data->bytes[i]), bb, sizeof(unsigned char), &pos);
+		write_bytes_to_buffer(&(data->bytes[i]), bb, sizeof(jep_byte), &pos);
 	}
 
-	write_bytes_to_buffer(&data_end, bb, sizeof(unsigned char), &pos);
+	write_bytes_to_buffer(&data_end, bb, sizeof(jep_byte), &pos);
 }
 
 static jep_huff_dict* read_dict_from_buffer(jep_byte_buffer* data, size_t* pos)
@@ -999,7 +1003,7 @@ static jep_huff_dict* read_dict_from_buffer(jep_byte_buffer* data, size_t* pos)
 	int success = 1;
 	jep_huff_sym sym;
 	unsigned long ul = 0;
-	unsigned char b = 0x00;
+	jep_byte b = 0x00;
 
 	dict = create_dict(sizeof(jep_huff_sym) * cap);
 
@@ -1032,17 +1036,17 @@ static jep_huff_dict* read_dict_from_buffer(jep_byte_buffer* data, size_t* pos)
 			/* destroy the bytes since we'll recreate them later */
 			free(sym.code->bytes);
 
-			success = read_bytes_from_buffer((unsigned char*)& ul, data, sizeof(unsigned long), pos);
+			success = read_bytes_from_buffer((jep_byte*)&ul, data, sizeof(unsigned long), pos);
 			sym.code->bit_count = ul;
 
-			success = read_bytes_from_buffer((unsigned char*)& ul, data, sizeof(unsigned long), pos);
+			success = read_bytes_from_buffer((jep_byte*)&ul, data, sizeof(unsigned long), pos);
 			sym.code->byte_count = ul;
 
 			success = read_bytes_from_buffer(&b, data, 1, pos);
 			sym.code->current_bits = b;
 
-			sym.code->bytes = (unsigned char*)
-				malloc(sizeof(unsigned char) * sym.code->byte_count);
+			sym.code->bytes = (jep_byte*)
+				malloc(sizeof(jep_byte) * sym.code->byte_count);
 
 			success = read_bytes_from_buffer(sym.code->bytes, data,
 				sym.code->byte_count, pos);
@@ -1100,23 +1104,23 @@ static jep_bitstring* read_data_from_buffer(jep_byte_buffer* data, size_t* pos)
 	free(bs->bytes);
 
 	unsigned long ul = 0;
-	unsigned char b = 0x00;
+	jep_byte b = 0x00;
 	size_t flag = 1;
 
 	flag = read_bytes_from_buffer(&b, data, 1, pos);
 
 	if (b == data_begin)
 	{
-		read_bytes_from_buffer((unsigned char*)& ul, data, sizeof(unsigned long), pos);
+		read_bytes_from_buffer((jep_byte*)&ul, data, sizeof(unsigned long), pos);
 		bs->bit_count = ul;
 
-		read_bytes_from_buffer((unsigned char*)& ul, data, sizeof(unsigned long), pos);
+		read_bytes_from_buffer((jep_byte*)&ul, data, sizeof(unsigned long), pos);
 		bs->byte_count = ul;
 
-		read_bytes_from_buffer(&b, data, sizeof(unsigned char), pos);
+		read_bytes_from_buffer(&b, data, sizeof(jep_byte), pos);
 		bs->current_bits = b;
 
-		bs->bytes = (unsigned char*)malloc(sizeof(unsigned char) * bs->byte_count);
+		bs->bytes = (jep_byte*)malloc(sizeof(jep_byte) * bs->byte_count);
 
 		flag = read_bytes_from_buffer(bs->bytes, data, bs->byte_count, pos);
 	}
@@ -1169,7 +1173,7 @@ static int build_branch(
 	jep_huff_node** node,
 	jep_bitstring* bs,
 	jep_huff_sym data,
-	unsigned char byte,
+	jep_byte byte,
 	unsigned long bit,
 	unsigned long bit_count
 )
@@ -1215,7 +1219,7 @@ static int build_branch(
 	return build_branch(leaf, bs, data, byte, bit, ++bit_count);
 }
 
-static int read_bytes_from_buffer(unsigned char* b, jep_byte_buffer* bb, size_t n, size_t* pos)
+static int read_bytes_from_buffer(jep_byte* b, jep_byte_buffer* bb, size_t n, size_t* pos)
 {
 	if (bb == NULL || bb->buffer == NULL)
 		return 0;
@@ -1237,7 +1241,7 @@ static int read_bytes_from_buffer(unsigned char* b, jep_byte_buffer* bb, size_t 
 	return result;
 }
 
-static int write_bytes_to_buffer(const unsigned char* b, jep_byte_buffer* bb, size_t n, size_t* pos)
+static int write_bytes_to_buffer(const jep_byte* b, jep_byte_buffer* bb, size_t n, size_t* pos)
 {
 	if (bb == NULL || bb->buffer == NULL)
 		return 0;
