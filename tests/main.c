@@ -489,9 +489,143 @@ int json_field_test()
 }
 
 
+int huff_encode_test()
+{
+	jep_byte data[6] = {
+		0x43, 0x41, 0x42, 0x43, 0x43, 0x42
+	};
+
+	jep_byte_buffer* raw;
+	jep_huff_code* huff;
+	int res;
+
+	raw = jep_create_byte_buffer();
+
+	if (raw == NULL)
+	{
+		return 0;
+	}
+
+	jep_append_bytes(raw, data, 6);
+
+	huff = jep_huff_encode(raw);
+
+	jep_destroy_byte_buffer(raw);
+
+	if (huff == NULL)
+	{
+		return 0;
+	}
+
+	res = 1;
+
+	if (huff->dict->count != 3)
+	{
+		res = 0;
+	}
+
+	if (huff->tree->nodes->sym.f != 6)
+	{
+		res = 0;
+	}
+
+	if (huff->tree->nodes->leaf_1->leaf_1->sym.b != 65)
+	{
+		res = 0;
+	}
+
+	if (huff->tree->nodes->leaf_1->leaf_2->sym.b != 66)
+	{
+		res = 0;
+	}
+
+	if (huff->tree->nodes->leaf_2->sym.b != 67)
+	{
+		res = 0;
+	}
+
+	jep_destroy_huff_code(huff);
+
+	return res;
+}
+
+int huff_decode_test()
+{
+	// The byte sequence 0x43, 0x41, 0x42, 0x43, 0x43, 0x42
+	// encoded using Huffman coding
+	jep_byte data[54] = {
+		0x01, 0x02, 0x41, 0x03, 0x02,
+		0x00, 0x00, 0x00, 0x01, 0x00,
+		0x00, 0x00, 0x02, 0x03, 0x02,
+		0x42, 0x03, 0x02, 0x00, 0x00,
+		0x00, 0x01, 0x00, 0x00, 0x00,
+		0x02, 0x01, 0x02, 0x43, 0x03,
+		0x01, 0x00, 0x00, 0x00, 0x01,
+		0x00, 0x00, 0x00, 0x01, 0x00,
+		0x04, 0x05, 0x09, 0x00, 0x00,
+		0x00, 0x02, 0x00, 0x00, 0x00,
+		0x01, 0x8E, 0x00, 0x06
+	};
+
+	jep_byte_buffer* encoded;
+	jep_huff_code* huff;
+	jep_byte_buffer* decoded;
+	int res;
+
+	encoded = jep_create_byte_buffer();
+
+	if (encoded == NULL)
+		return 0;
+
+	jep_append_bytes(encoded, data, 54);
+
+	huff = jep_huff_read(encoded);
+
+	jep_destroy_byte_buffer(encoded);
+
+	if (huff == NULL)
+		return 0;
+
+	decoded = jep_huff_decode(huff);
+
+	jep_destroy_huff_code(huff);
+
+	if (decoded == NULL)
+		return 0;
+
+	res = 1;
+
+	if (decoded->size != 6)
+	{
+		jep_destroy_byte_buffer(decoded);
+		return 0;
+	}
+
+	if (decoded->buffer[0] != 0x43)
+		res = 0;
+
+	if (decoded->buffer[1] != 0x41)
+		res = 0;
+
+	if (decoded->buffer[2] != 0x42)
+		res = 0;
+
+	if (decoded->buffer[3] != 0x43)
+		res = 0;
+
+	if (decoded->buffer[4] != 0x43)
+		res = 0;
+
+	if (decoded->buffer[5] != 0x42)
+		res = 0;
+
+	jep_destroy_byte_buffer(decoded);
+
+	return res;
+}
 
 
-#define MAX_PASSES 22
+#define MAX_PASSES 24
 
 int main(int argc, char** argv)
 {
@@ -511,7 +645,7 @@ int main(int argc, char** argv)
 	passes += char_buffer_create_test();
 	passes += char_buffer_append_char_test();
 	passes += char_buffer_append_chars_test();
-	
+
 	// string
 	passes += string_create_test();
 	passes += empty_string_test();
@@ -528,6 +662,11 @@ int main(int argc, char** argv)
 	// JSON
 	passes += json_parse_test();
 	passes += json_field_test();
+
+	// Huffman Coding
+	passes += huff_encode_test();
+	passes += huff_decode_test();
+
 
 	printf("%d/%d tests passed\n", passes, MAX_PASSES);
 

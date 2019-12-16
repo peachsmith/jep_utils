@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <limits.h>
+#include <stdint.h>
 
 #ifdef _WIN32
 #ifdef JEP_UTILS_EXPORTS
@@ -42,11 +43,9 @@
 
  /**
   * A byte.
-  * According to the C standard, a char has the size of a single byte.
-  * Therefore, the size of a char primitive is always 1. The number of
-  * bits in a byte is specified by the CHAR_BIT constant in limits.h.
+  * In this context, the term "byte" is used to refer to an octet (8 bits).
   */
-typedef unsigned char jep_byte;
+typedef uint8_t jep_byte;
 
 
 
@@ -148,8 +147,8 @@ typedef struct jep_char_buffer {
  *   pop - removes the last bit of a sequence
  */
 typedef struct jep_bitstring {
-	unsigned long bit_count;
-	unsigned long byte_count;
+	uint32_t bit_count;
+	uint32_t byte_count;
 	jep_byte* bytes;
 	jep_byte current_bits;
 }jep_bitstring;
@@ -165,9 +164,9 @@ typedef struct jep_bitstring {
  */
 typedef struct jep_huff_sym {
 	jep_byte b;          /* byte       */
-	unsigned long f;     /* frequency  */
-	unsigned long w;     /* weight     */
-	unsigned long n;     /* tree depth */
+	uint32_t f;          /* frequency  */
+	uint32_t w;          /* weight     */
+	uint32_t n;          /* tree depth */
 	jep_bitstring* code; /* bit code   */
 }jep_huff_sym;
 
@@ -177,7 +176,7 @@ typedef struct jep_huff_sym {
  */
 typedef struct jep_huff_dict {
 	jep_huff_sym* symbols;
-	unsigned long count;
+	uint32_t count;
 }jep_huff_dict;
 
 /**
@@ -200,7 +199,6 @@ typedef struct jep_huff_node {
  * symbol in a terminal node.
  */
 typedef struct jep_huff_tree {
-	unsigned long count;
 	jep_huff_node* nodes;
 	jep_huff_node* tail;
 }jep_huff_tree;
@@ -630,7 +628,7 @@ jep_huff_decode(jep_huff_code* hc);
  *   huff_code - a Huffman Coding context or NULL on failure
  */
 JEP_UTILS_API jep_huff_code* JEP_UTILS_CALL
-jep_read_huff_code_from_buffer(jep_byte_buffer* raw);
+jep_huff_read(jep_byte_buffer* raw);
 
 /**
  * Writes data encoded with Huffman Coding to a byte buffer.
@@ -644,7 +642,7 @@ jep_read_huff_code_from_buffer(jep_byte_buffer* raw);
  *   int - 1 on success or 0 on failure
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_write_huff_code_to_buffer(jep_huff_code* hc, jep_byte_buffer* buffer);
+jep_huff_write(jep_huff_code* hc, jep_byte_buffer* buffer);
 
 /**
  * Frees the resources allocated for a Huffman Coding context.
