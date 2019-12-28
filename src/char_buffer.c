@@ -1,4 +1,5 @@
-#include "jep_utils.h"
+#include "jep_utils/jep_utils.h"
+#include "jep_utils/char_buffer.h"
 
 
 
@@ -99,7 +100,7 @@ jep_remove_char_at(jep_char_buffer* cb, size_t index)
 		return;
 
 	int removed = 0;
-	jep_char nul = { 0x00, 0x00, 0x00 };
+	jep_char nul = 0x00;
 	size_t i;
 
 	for (i = 0; i < cb->size; i++)

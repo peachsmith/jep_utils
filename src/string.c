@@ -1,4 +1,5 @@
-#include "jep_utils.h"
+#include "jep_utils/jep_utils.h"
+#include "jep_utils/string.h"
 
 
 
@@ -46,30 +47,56 @@ jep_destroy_string(jep_string* str)
 }
 
 JEP_UTILS_API jep_string* JEP_UTILS_CALL
-jep_bytes_to_string(const jep_byte* bytes, int encoding, size_t n)
+jep_bytes_to_string(const char* bytes, int encoding, size_t n)
 {
 	jep_string* str;
 	jep_code_point* pts;
 	size_t res;
 
+	res = 0;
+	pts = NULL;
 	str = jep_create_string(0);
 
 	if (str == NULL)
 		return NULL;
 
-	if (encoding == JEP_ENCODING_UTF_8)
+	switch (encoding)
 	{
+	case JEP_ENCODING_UTF_8:
 		pts = jep_utf8_decode(bytes, n, &res);
+		break;
 
-		if (pts == NULL)
-		{
-			jep_destroy_string(str);
-			return NULL;
-		}
+	case JEP_ENCODING_UTF_16:
+		pts = jep_utf16_decode(bytes, n, &res);
+		break;
 
-		str->size = res;
-		str->chars = pts;
+	case JEP_ENCODING_UTF_16_BE:
+		pts = jep_utf16be_decode(bytes, n, &res);
+		break;
+
+	case JEP_ENCODING_UTF_16_LE:
+		pts = jep_utf16le_decode(bytes, n, &res);
+		break;
+
+	default:
+		break;
 	}
+
+	if (pts == NULL)
+	{
+		jep_destroy_string(str);
+		return NULL;
+	}
+
+	if (res == 0)
+	{
+		jep_destroy_string(str);
+		free(pts);
+		return NULL;
+	}
+
+	str->size = res;
+	str->chars = pts;
 
 	return str;
 }
@@ -114,15 +141,8 @@ jep_strcmp(jep_string* a, jep_string* b)
 	size_t i;
 	for (i = 0; i < a->size; i++)
 	{
-		jep_char ca = a->chars[i];
-		jep_char cb = b->chars[i];
-
-		if (ca.b3 > cb.b3) return 1;
-		else if (ca.b3 < cb.b3) return -1;
-		else if (ca.b2 > cb.b2) return 1;
-		else if (ca.b2 < cb.b2) return -1;
-		else if (ca.b1 > cb.b1) return 1;
-		else if (ca.b1 < cb.b1) return -1;
+		if (a->chars[i] < b->chars[i]) return -1;
+		else if (a->chars[i] > b->chars[i]) return 1;
 	}
 
 	return 0;
@@ -137,6 +157,9 @@ jep_strcpy(jep_string* src, jep_string* dest)
 	if (src->chars == NULL)
 		return 0;
 
+	if (src->size == 0)
+		return 0;
+
 	size_t i;
 	jep_char* dchars;
 	jep_char* nchars;
@@ -144,11 +167,11 @@ jep_strcpy(jep_string* src, jep_string* dest)
 	dchars = dest->chars;
 
 	// make sure we have a destination buffer
-	if (dchars == NULL)
+	if (dest->chars == NULL)
 	{
-		dchars = (jep_char*)malloc(sizeof(jep_char) * src->size);
+		dest->chars = (jep_char*)malloc(sizeof(jep_char) * src->size);
 
-		if (dchars == NULL)
+		if (dest->chars == NULL)
 			return 0;
 
 		dest->size = src->size;
@@ -158,10 +181,10 @@ jep_strcpy(jep_string* src, jep_string* dest)
 	// source buffer size.
 	if (src->size != dest->size)
 	{
-		nchars = (jep_char*)realloc(dest->chars, src->size);
+		nchars = jep_realloc(dest->chars, jep_char, src->size);
 
 		if (nchars != NULL)
-			dchars = nchars;
+			dest->chars = nchars;
 		else
 			return 0;
 
@@ -170,10 +193,8 @@ jep_strcpy(jep_string* src, jep_string* dest)
 
 	for (i = 0; i < src->size; i++)
 	{
-		dchars[i] = src->chars[i];
+		dest->chars[i] = src->chars[i];
 	}
-
-	dest->chars = dchars;
 
 	return 1;
 }
@@ -211,8 +232,9 @@ jep_string_to_long(jep_string* str, int base)
 
 	for (i = 0; i < size; i++)
 	{
-		if (raw[i].b3 == 0 && raw[i].b2 == 0)
-			buffer[i] = str->chars[i].b1;
+		//if (raw[i].b3 == 0 && raw[i].b2 == 0)
+		if (raw[i] <= 0x000000FF)
+			buffer[i] = (str->chars[i] & 0xFF);
 		else
 			buffer[i] = '\0';
 	}
@@ -253,8 +275,9 @@ jep_string_to_ulong(jep_string* str, int base)
 
 	for (i = 0; i < size; i++)
 	{
-		if (raw[i].b3 == 0 && raw[i].b2 == 0)
-			buffer[i] = str->chars[i].b1;
+		//if (raw[i].b3 == 0 && raw[i].b2 == 0)
+		if (raw[i] <= 0x000000FF)
+			buffer[i] = (str->chars[i] & 0xFF);
 		else
 			buffer[i] = '\0';
 	}
@@ -296,8 +319,9 @@ jep_string_to_int(jep_string* str, int base)
 
 	for (i = 0; i < size; i++)
 	{
-		if (raw[i].b3 == 0 && raw[i].b2 == 0)
-			buffer[i] = str->chars[i].b1;
+		//if (raw[i].b3 == 0 && raw[i].b2 == 0)
+		if (raw[i] <= 0x000000FF)
+			buffer[i] = (str->chars[i] & 0xFF);
 		else
 			buffer[i] = '\0';
 	}
@@ -341,8 +365,9 @@ jep_string_to_uint(jep_string* str, int base)
 
 	for (i = 0; i < size; i++)
 	{
-		if (raw[i].b3 == 0 && raw[i].b2 == 0)
-			buffer[i] = str->chars[i].b1;
+		//if (raw[i].b3 == 0 && raw[i].b2 == 0)
+		if (raw[i] <= 0x000000FF)
+			buffer[i] = (str->chars[i] & 0xFF);
 		else
 			buffer[i] = '\0';
 	}
@@ -386,8 +411,9 @@ jep_string_to_double(jep_string* str)
 
 	for (i = 0; i < size; i++)
 	{
-		if (raw[i].b3 == 0 && raw[i].b2 == 0)
-			buffer[i] = str->chars[i].b1;
+		//if (raw[i].b3 == 0 && raw[i].b2 == 0)
+		if (raw[i] <= 0x000000FF)
+			buffer[i] = (str->chars[i] & 0xFF);
 		else
 			buffer[i] = '\0';
 	}

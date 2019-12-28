@@ -1,4 +1,7 @@
-#include "jep_utils.h"
+#include "jep_utils/jep_utils.h"
+#include "jep_utils/json.h"
+#include "jep_utils/char_buffer.h"
+#include "jep_utils/string.h"
 
 
 
@@ -61,19 +64,42 @@
 
 
 
+// useful character constants
+// TODO: possibly move these into character.h and make them macros
+#define JEP_CHAR_NUL    0x00
+#define JEP_CHAR_LBRC   0x7B
+#define JEP_CHAR_RBRC   0x7D
+#define JEP_CHAR_LSQR   0x5B
+#define JEP_CHAR_RSQR   0x5D
+#define JEP_CHAR_QUOTE  0x22
+#define JEP_CHAR_COLON  0x3A
+#define JEP_CHAR_COMMA  0x2C
+#define JEP_CHAR_PERIOD 0x2E
+#define JEP_CHAR_0      0x30
+#define JEP_CHAR_1      0x31
+#define JEP_CHAR_2      0x32
+#define JEP_CHAR_3      0x33
+#define JEP_CHAR_4      0x34
+#define JEP_CHAR_5      0x35
+#define JEP_CHAR_6      0x36
+#define JEP_CHAR_7      0x37
+#define JEP_CHAR_8      0x38
+#define JEP_CHAR_9      0x39
+#define JEP_CHAR_x      0x78
+#define JEP_CHAR_X      0x58
 
-static const jep_char nul = { 0x00, 0x00, 0x00 };
-static const jep_char lbrc = { 0x7B, 0x00, 0x00 };
-static const jep_char rbrc = { 0x7D, 0x00, 0x00 };
-static const jep_char lsqr = { 0x5B, 0x00, 0x00 };
-static const jep_char rsqr = { 0x5D, 0x00, 0x00 };
-static const jep_char quot = { 0x22, 0x00, 0x00 };
-static const jep_char colon = { 0x3A, 0x00, 0x00 };
-static const jep_char comma = { 0x2C, 0x00, 0x00 };
-static const jep_char period = { 0x2E, 0x00, 0x00 };
-static const jep_char lo_x = { 0x78, 0x00, 0x00 };
-static const jep_char hi_x = { 0x58, 0x00, 0x00 };
-static const jep_char zero = { 0x30, 0x00, 0x00 };
+static const jep_char nul = 0x00;
+static const jep_char lbrc = 0x7B;
+static const jep_char rbrc = 0x7D;
+static const jep_char lsqr = 0x5B;
+static const jep_char rsqr = 0x5D;
+static const jep_char quot = 0x22;
+static const jep_char colon = 0x3A;
+static const jep_char comma = 0x2C;
+static const jep_char period = 0x2E;
+static const jep_char lo_x = 0x78;
+static const jep_char hi_x = 0x58;
+static const jep_char zero = 0x30;
 
 
 
@@ -93,7 +119,7 @@ static const jep_char zero = { 0x30, 0x00, 0x00 };
  * Returns:
  *   json_token - a new JSON token or NULL on failure
  */
-static json_token* create_json_token(int type);
+static jep_json_token* create_json_token(int type);
 
 /**
  * Frees the memory allocated for a JSON token.
@@ -101,7 +127,7 @@ static json_token* create_json_token(int type);
  * Params:
  *   json_token - a reference to a JSON token
  */
-static void destroy_json_token(json_token* tok);
+static void destroy_json_token(jep_json_token* tok);
 
 /**
  * Appends a JSON token onto a list of tokens.
@@ -110,7 +136,7 @@ static void destroy_json_token(json_token* tok);
  *   json_token - a linked list of JSON tokens
  *   json_token - the new token to append
  */
-static void add_json_token(json_token* list, json_token* next);
+static void add_json_token(jep_json_token* list, jep_json_token* next);
 
 
 
@@ -128,7 +154,7 @@ static void add_json_token(json_token* list, json_token* next);
  * Returns:
  *   json_state - a new JSON state
  */
-static json_state* create_json_state(int state);
+static jep_json_state* create_json_state(int state);
 
 /**
  * Frees the memory allocated for a JSON tokenization state.
@@ -136,7 +162,7 @@ static json_state* create_json_state(int state);
  * Params:
  *   json_state - a reference to a JSON tokenization state
  */
-static void destroy_json_state(json_state* state);
+static void destroy_json_state(jep_json_state* state);
 
 /**
  * Pushes a JSON tokenization onto a stack of JSON
@@ -146,7 +172,7 @@ static void destroy_json_state(json_state* state);
  *   json_state - a stack of JSON tokenization states
  *   json_state - a new JSON tokenization state
  */
-static void push_state(json_state* stack, json_state* state);
+static void push_state(jep_json_state* stack, jep_json_state* state);
 
 /**
  * Pops the top JSON tokenization state from the stack.
@@ -157,7 +183,7 @@ static void push_state(json_state* stack, json_state* state);
  * Returns:
  *   json_state - the former top of the stack
  */
-static json_state* pop_state(json_state* stack);
+static jep_json_state* pop_state(jep_json_state* stack);
 
 /**
  * Frees the memory allocated for a JSON tokenization state stack.
@@ -165,7 +191,7 @@ static json_state* pop_state(json_state* stack);
  * Params:
  *   json_state - a reference to a JSON tokenization state stack
  */
-static void destroy_json_state_stack(json_state* state);
+static void destroy_json_state_stack(jep_json_state* state);
 
 
 
@@ -296,7 +322,7 @@ static void copy_char_buffer(jep_char_buffer* src, jep_char_buffer* dest);
  * Returns:
  *   json_object
  */
-static json_object* create_json_object();
+static jep_json_object* create_json_object();
 
 /**
  * Creates a new JSON field
@@ -304,7 +330,7 @@ static json_object* create_json_object();
  * Returns:
  *   json_field
  */
-static json_field* create_json_field();
+static jep_json_field* create_json_field();
 
 /**
  * Creates a new JSON array
@@ -312,7 +338,7 @@ static json_field* create_json_field();
  * Returns:
  *   json_array
  */
-static json_array* create_json_array();
+static jep_json_array* create_json_array();
 
 /**
  * Creates a new JSON value
@@ -320,7 +346,7 @@ static json_array* create_json_array();
  * Returns:
  *   json_value
  */
-static json_value* create_json_value();
+static jep_json_value* create_json_value();
 
 /**
  * Frees the memory allocated for a JSON field.
@@ -328,7 +354,7 @@ static json_value* create_json_value();
  * Params:
  *   json_field - the JSON field to destroy
  */
-static void destroy_json_field(json_field* f);
+static void destroy_json_field(jep_json_field* f);
 
 /**
  * Frees the memory allocated for a JSON array.
@@ -336,7 +362,7 @@ static void destroy_json_field(json_field* f);
  * Params:
  *   json_field - the JSON array to destroy
  */
-static void destroy_json_array(json_array* a);
+static void destroy_json_array(jep_json_array* a);
 
 /**
  * Frees the memory allocated for a JSON value.
@@ -344,7 +370,7 @@ static void destroy_json_array(json_array* a);
  * Params:
  *   json_field - the JSON value to destroy
  */
-static void destroy_json_value(json_value* v);
+static void destroy_json_value(jep_json_value* v);
 
 /**
  * Adds a JSON value to a JSON array.
@@ -353,7 +379,7 @@ static void destroy_json_value(json_value* v);
  *   json_array - a JSON array to receive the value
  *   json_value - a JSON value to be inserted into the array
  */
-static void append_value(json_array* arr, json_value* val);
+static void append_value(jep_json_array* arr, jep_json_value* val);
 
 /**
  * Adds a JSON field to a JSON object.
@@ -362,7 +388,7 @@ static void append_value(json_array* arr, json_value* val);
  *   json_object - a JSON object to recieve the field
  *   json_field - a JSON field to be inserted into the object
  */
-static void append_field(json_object* obj, json_field* field);
+static void append_field(jep_json_object* obj, jep_json_field* field);
 
 
 
@@ -384,7 +410,7 @@ static void append_field(json_object* obj, json_field* field);
  * Returns:
  *   json_token* - a list of JSON tokens
  */
-static json_token* tokenize_json(jep_string* raw, int* err);
+static jep_json_token* tokenize_json(jep_string* raw, int* err);
 
 /**
  * Parses a list of JSON tokens into a JSON object.
@@ -395,7 +421,7 @@ static json_token* tokenize_json(jep_string* raw, int* err);
  * Returns:
  *   json_object - a JSON object
  */
-static json_object* parse_json(json_token** tokens);
+static jep_json_object* parse_json(jep_json_token** tokens);
 
 /**
  * Prints a list of JSON tokens to a file.
@@ -404,7 +430,7 @@ static json_object* parse_json(json_token** tokens);
  *   json_token* - a list of JSON tokens
  *   FILE* - a file pointer
  */
-static void jep_print_json_tokens(json_token* list, FILE* f);
+static void jep_print_json_tokens(jep_json_token* list, FILE* f);
 
 /**
  * Frees the memory allocated for a list of JSON tokens.
@@ -412,7 +438,7 @@ static void jep_print_json_tokens(json_token* list, FILE* f);
  * Params:
  *   json_token* - a reference to a list of JSON tokens
  */
-static void destroy_json_token_list(json_token* list);
+static void destroy_json_token_list(jep_json_token* list);
 
 
 
@@ -421,12 +447,12 @@ static void destroy_json_token_list(json_token* list);
 /*                 Token Function Implementations                  */
 /*-----------------------------------------------------------------*/
 
-static json_token* create_json_token(int type)
+static jep_json_token* create_json_token(int type)
 {
 	if (type < JSON_BEGIN || type > JSON_TOKEN_NULL)
 		return NULL;
 
-	json_token* tok = (json_token*)malloc(sizeof(json_token));
+	jep_json_token* tok = (jep_json_token*)malloc(sizeof(jep_json_token));
 
 	if (tok == NULL)
 		return NULL;
@@ -439,7 +465,7 @@ static json_token* create_json_token(int type)
 	return tok;
 }
 
-static void destroy_json_token(json_token* tok)
+static void destroy_json_token(jep_json_token* tok)
 {
 	if (tok == NULL)
 		return;
@@ -450,7 +476,7 @@ static void destroy_json_token(json_token* tok)
 	free(tok);
 }
 
-static void add_json_token(json_token* list, json_token* next)
+static void add_json_token(jep_json_token* list, jep_json_token* next)
 {
 	if (list == NULL || next == NULL)
 		return;
@@ -483,9 +509,9 @@ static void add_json_token(json_token* list, json_token* next)
 /*             State Management Function Implementations           */
 /*-----------------------------------------------------------------*/
 
-static json_state* create_json_state(int state)
+static jep_json_state* create_json_state(int state)
 {
-	json_state* st = (json_state*)malloc(sizeof(json_state));
+	jep_json_state* st = (jep_json_state*)malloc(sizeof(jep_json_state));
 
 	if (st == NULL)
 		return NULL;
@@ -497,7 +523,7 @@ static json_state* create_json_state(int state)
 	return st;
 }
 
-static void destroy_json_state(json_state* state)
+static void destroy_json_state(jep_json_state* state)
 {
 	if (state == NULL)
 		return;
@@ -505,7 +531,7 @@ static void destroy_json_state(json_state* state)
 	free(state);
 }
 
-static void push_state(json_state* stack, json_state* state)
+static void push_state(jep_json_state* stack, jep_json_state* state)
 {
 	if (stack == NULL || state == NULL)
 		return;
@@ -514,7 +540,7 @@ static void push_state(json_state* stack, json_state* state)
 	stack->top = state;
 }
 
-static json_state* pop_state(json_state* stack)
+static jep_json_state* pop_state(jep_json_state* stack)
 {
 	if (stack == NULL)
 		return NULL;
@@ -522,9 +548,9 @@ static json_state* pop_state(json_state* stack)
 	if (stack->top->state == JSON_BEGIN)
 		return stack->top;
 
-	json_state* old_top = stack->top;
-	json_state* current = stack->top;
-	json_state* new_top = current->prev;
+	jep_json_state* old_top = stack->top;
+	jep_json_state* current = stack->top;
+	jep_json_state* new_top = current->prev;
 
 	while (current != NULL)
 	{
@@ -535,13 +561,13 @@ static json_state* pop_state(json_state* stack)
 	return old_top;
 }
 
-static void destroy_json_state_stack(json_state* stack)
+static void destroy_json_state_stack(jep_json_state* stack)
 {
 	if (stack == NULL)
 		return;
 
-	json_state* state = stack->top;
-	json_state* prev;
+	jep_json_state* state = stack->top;
+	jep_json_state* prev;
 
 	while (state != NULL)
 	{
@@ -560,69 +586,57 @@ static void destroy_json_state_stack(json_state* stack)
 
 static int is_whitespace(jep_char c)
 {
-	//return c == ' ' || c == '\t' || c == '\n' || c == '\r' ? 1 : 0;
-
-	return (c.b3 > 0x00 || c.b2 > 0x00) ? 0
-		: (c.b1 == 0x20      // ' '
-			|| c.b1 == 0x09  // '\t'
-			|| c.b1 == 0x0A  // '\n'
-			|| c.b1 == 0x0D) // '\r'
-		? 1
-		: 0;
+	return c == 0x20 // ' '
+		|| c == 0x09 // '\t'
+		|| c == 0x0A // '\n'
+		|| c == 0x0D // '\r'
+		? 1 : 0;
 }
 
 static int is_escape(jep_char c)
 {
-	return (c.b3 > 0x00 || c.b2 > 0x00) ? 0
-		: (c.b1 == 0x5C      // '\'
-			|| c.b1 == 0x74  // 't'
-			|| c.b1 == 0x6E  // 'n'
-			|| c.b1 == 0x72  // 'r'
-			|| c.b1 == 0x62  // 'b'
-			|| c.b1 == 0x66  // 'f'
-			|| c.b1 == 0x22) // '"'
-		? 1
-		: 0;
-
-	//return c == '\\'
-	//	|| c == 't'
-	//	|| c == 'n'
-	//	|| c == 'r'
-	//	|| c == 'b'
-	//	|| c == 'f'
-	//	|| c == '"'
-	//	? 1 : 0;
+	return c == 0x5C // '\\'
+		|| c == 0x74 // 't'
+		|| c == 0x6E // 'n'
+		|| c == 0x72 // 'r'
+		|| c == 0x62 // 'b'
+		|| c == 0x66 // 'f'
+		|| c == 0x22 // '"'
+		? 1 : 0;
 }
 
 static int is_number(jep_char c, int base)
 {
-	if (c.b3 > 0x00 || c.b2 > 0x00)
+	if (c > 0xFF)
 		return 0;
+
+	uint8_t lo = c & 0xFF;
 
 	if (base == 10 || base == 16)
 	{
-		if (c.b1 >= 0x30 && c.b1 <= 0x39)
+		if (lo >= 0x30 && lo <= 0x39)
 			return 1;
 	}
 
 	if (base == 16)
 	{
 		// 'A' .. 'F'
-		if (c.b1 >= 0x41 && c.b1 <= 0x46)
+		if (lo >= 0x41 && lo <= 0x46)
 			return 1;
 
 		// 'a' .. 'f'
-		if (c.b1 >= 0x61 && c.b1 <= 0x66)
+		if (lo >= 0x61 && lo <= 0x66)
 			return 1;
 
 		// 'x' or 'X'
-		if (c.b1 == 0x78 || c.b1 == 0x58)
+		if (lo == 0x78 || lo == 0x58)
 			return 1;
 	}
 
 	if (base == 10)
 	{
-		return c.b1 == '.' ? 1 : 0;
+		// check for .
+		return lo == 0x2E ? 1 : 0;
 	}
 
 	return 0;
@@ -630,23 +644,28 @@ static int is_number(jep_char c, int base)
 
 static int is_number_start(jep_char c)
 {
-	if (c.b3 > 0x00 || c.b2 > 0x00)
+	//if (c.b3 > 0x00 || c.b2 > 0x00)
+	if (c > 0xFF)
 		return 0;
 
+	uint8_t lo = c & 0xFF;
+
 	/* check for the range '0' .. '9' */
-	if (c.b1 >= 0x30 && c.b1 <= 0x39)
+	if (lo >= 0x30 && lo <= 0x39)
 		return 1;
 
 	/* check for '-' */
-	return c.b3 == 0x2D ? 1 : 0;
+	return lo == 0x2D ? 1 : 0;
 }
 
 static int is_boolean(jep_char c)
 {
-	if (c.b3 > 0x00 || c.b2 > 0x00)
+	if (c > 0xFF)
 		return 0;
 
-	switch (c.b1)
+	uint8_t lo = c & 0xFF;
+
+	switch (lo)
 	{
 	case 0x74: /* t */
 	case 0x72: /* r */
@@ -664,28 +683,20 @@ static int is_boolean(jep_char c)
 
 static int is_boolean_start(jep_char c)
 {
-	//return (c == 't' || c == 'f') ? 1 : 0;
 	// check for 't' or 'f'
-	return (c.b3 > 0x00 || c.b2 > 0x00) ? 0
-		: (c.b1 == 0x74 || c.b1 == 0x66) ? 1
-		: 0;
+	return (c == 0x74 || c == 0x66) ? 1 : 0;
 }
 
 static int is_null(jep_char c)
 {
-	//return (c == 'u' || c == 'l') ? 1 : 0;
 	// check for 'u' or 'l'
-	return (c.b3 > 0x00 || c.b2 > 0x00) ? 0
-		: (c.b1 == 0x75 || c.b1 == 0x6C) ? 1
-		: 0;
+	return (c == 0x75 || c == 0x6C) ? 1 : 0;
 }
 
 static int is_null_start(jep_char c)
 {
 	// check for 'n'
-	return (c.b3 > 0x00 || c.b2 > 0x00) ? 0
-		: c.b1 == 0x6E ? 1
-		: 0;
+	return c == 0x6E ? 1 : 0;
 }
 
 
@@ -735,11 +746,11 @@ static void copy_char_buffer(jep_char_buffer* src, jep_char_buffer* dest)
 /*             Object Creation Function Implementations            */
 /*-----------------------------------------------------------------*/
 
-static json_object* create_json_object()
+static jep_json_object* create_json_object()
 {
-	json_object* obj;
+	jep_json_object* obj;
 
-	obj = (json_object*)malloc(sizeof(json_object));
+	obj = (jep_json_object*)malloc(sizeof(jep_json_object));
 
 	if (obj == NULL)
 		return NULL;
@@ -750,11 +761,11 @@ static json_object* create_json_object()
 	return obj;
 }
 
-static json_field* create_json_field()
+static jep_json_field* create_json_field()
 {
-	json_field* field;
+	jep_json_field* field;
 
-	field = (json_field*)malloc(sizeof(json_field));
+	field = (jep_json_field*)malloc(sizeof(jep_json_field));
 
 	if (field == NULL)
 		return NULL;
@@ -766,11 +777,11 @@ static json_field* create_json_field()
 	return field;
 }
 
-static json_array* create_json_array()
+static jep_json_array* create_json_array()
 {
-	json_array* arr;
+	jep_json_array* arr;
 
-	arr = (json_array*)malloc(sizeof(json_array));
+	arr = (jep_json_array*)malloc(sizeof(jep_json_array));
 
 	if (arr == NULL)
 		return NULL;
@@ -781,11 +792,11 @@ static json_array* create_json_array()
 	return arr;
 }
 
-static json_value* create_json_value()
+static jep_json_value* create_json_value()
 {
-	json_value* val;
+	jep_json_value* val;
 
-	val = (json_value*)malloc(sizeof(json_value));
+	val = (jep_json_value*)malloc(sizeof(jep_json_value));
 
 	if (val == NULL)
 		return NULL;
@@ -796,7 +807,7 @@ static json_value* create_json_value()
 	return val;
 }
 
-static void destroy_json_field(json_field* f)
+static void destroy_json_field(jep_json_field* f)
 {
 	if (f == NULL)
 		return;
@@ -809,13 +820,13 @@ static void destroy_json_field(json_field* f)
 	free(f);
 }
 
-static void destroy_json_array(json_array* a)
+static void destroy_json_array(jep_json_array* a)
 {
 	if (a == NULL)
 		return;
 
-	json_value* v = a->values;
-	json_value* next = NULL;
+	jep_json_value* v = a->values;
+	jep_json_value* next = NULL;
 
 	while (v != NULL)
 	{
@@ -827,7 +838,7 @@ static void destroy_json_array(json_array* a)
 	free(a);
 }
 
-static void destroy_json_value(json_value* v)
+static void destroy_json_value(jep_json_value* v)
 {
 	if (v == NULL)
 		return;
@@ -847,7 +858,7 @@ static void destroy_json_value(json_value* v)
 	free(v);
 }
 
-static void append_value(json_array* arr, json_value* val)
+static void append_value(jep_json_array* arr, jep_json_value* val)
 {
 	if (arr == NULL)
 		return;
@@ -858,7 +869,7 @@ static void append_value(json_array* arr, json_value* val)
 	}
 	else
 	{
-		json_value* v = arr->values;
+		jep_json_value* v = arr->values;
 
 		while (v->next != NULL)
 		{
@@ -871,7 +882,7 @@ static void append_value(json_array* arr, json_value* val)
 	arr->tail = val;
 }
 
-static void append_field(json_object* obj, json_field* field)
+static void append_field(jep_json_object* obj, jep_json_field* field)
 {
 	if (obj == NULL)
 		return;
@@ -882,7 +893,7 @@ static void append_field(json_object* obj, json_field* field)
 	}
 	else
 	{
-		json_field* f = obj->fields;
+		jep_json_field* f = obj->fields;
 
 		while (f->next != NULL)
 		{
@@ -902,7 +913,7 @@ static void append_field(json_object* obj, json_field* field)
 /*                    Tokenization Error Logic                     */
 /*-----------------------------------------------------------------*/
 
-static int is_begin_object_err(json_state* state, json_token* list)
+static int is_begin_object_err(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state != JSON_BEGIN
 		&& state->top->state != JSON_BEGIN_ARRAY
@@ -921,7 +932,7 @@ static int is_begin_object_err(json_state* state, json_token* list)
 	return 0;
 }
 
-static int is_end_object_err(json_state* state, json_token* list)
+static int is_end_object_err(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state == JSON_BEGIN)
 	{
@@ -937,7 +948,7 @@ static int is_end_object_err(json_state* state, json_token* list)
 	return 0;
 }
 
-static int is_begin_array_error(json_state* state, json_token* list)
+static int is_begin_array_error(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state == JSON_BEGIN)
 	{
@@ -953,7 +964,7 @@ static int is_begin_array_error(json_state* state, json_token* list)
 	return 0;
 }
 
-static int is_end_array_error(json_state* state, json_token* list)
+static int is_end_array_error(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state == JSON_BEGIN)
 	{
@@ -969,7 +980,7 @@ static int is_end_array_error(json_state* state, json_token* list)
 	return 0;
 }
 
-static int is_begin_string_error(json_state* state, json_token* list)
+static int is_begin_string_error(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state == JSON_BEGIN)
 	{
@@ -997,7 +1008,7 @@ static int is_begin_string_error(json_state* state, json_token* list)
 	return 0;
 }
 
-static int is_colon_error(json_state* state, json_token* list)
+static int is_colon_error(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state == JSON_BEGIN)
 	{
@@ -1011,7 +1022,7 @@ static int is_colon_error(json_state* state, json_token* list)
 	return 0;
 }
 
-static int is_comma_error(json_state* state, json_token* list)
+static int is_comma_error(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state == JSON_BEGIN)
 	{
@@ -1030,7 +1041,7 @@ static int is_comma_error(json_state* state, json_token* list)
 	return 0;
 }
 
-static int is_number_error(json_state* state, json_token* list)
+static int is_number_error(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state == JSON_BEGIN)
 	{
@@ -1055,7 +1066,7 @@ static int is_number_error(json_state* state, json_token* list)
 	return 0;
 }
 
-static int is_boolean_error(json_state* state, json_token* list)
+static int is_boolean_error(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state == JSON_BEGIN)
 	{
@@ -1080,7 +1091,7 @@ static int is_boolean_error(json_state* state, json_token* list)
 	return 0;
 }
 
-static int is_null_error(json_state* state, json_token* list)
+static int is_null_error(jep_json_state* state, jep_json_token* list)
 {
 	if (state->top->state == JSON_BEGIN)
 	{
@@ -1111,16 +1122,16 @@ static int is_null_error(json_state* state, json_token* list)
 /*                 Parsing Function Implementations                */
 /*-----------------------------------------------------------------*/
 
-static json_token* tokenize_json(jep_string* raw, int* err)
+static jep_json_token* tokenize_json(jep_string* raw, int* err)
 {
-	json_token* list = create_json_token(JSON_BEGIN);
+	jep_json_token* list = create_json_token(JSON_BEGIN);
 
 	size_t i = 0;
 
 	if (list == NULL || raw == NULL)
 		return NULL;
 
-	json_state* state = create_json_state(JSON_BEGIN);
+	jep_json_state* state = create_json_state(JSON_BEGIN);
 
 	if (state == NULL)
 	{
@@ -1142,14 +1153,14 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 	for (i = 0; i < raw->size && !error; i++)
 	{
 		// left Curly Brace '{'
-		if (!jep_char_cmp(raw->chars[i], lbrc))
+		if (!jep_char_cmp(raw->chars[i], JEP_CHAR_LBRC))
 		{
 			error = is_begin_object_err(state, list);
 
 			if (!error)
 			{
-				json_state* s;
-				json_token* tok;
+				jep_json_state* s;
+				jep_json_token* tok;
 
 				s = create_json_state(JSON_BEGIN_OBJECT);
 				push_state(state, s);
@@ -1162,14 +1173,14 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 		}
 
 		// right Curly Brace '}'
-		else if (!jep_char_cmp(raw->chars[i], rbrc))
+		else if (!jep_char_cmp(raw->chars[i], JEP_CHAR_RBRC))
 		{
 			error = is_end_object_err(state, list);
 
 			if (!error)
 			{
-				json_state* s;
-				json_token* tok;
+				jep_json_state* s;
+				jep_json_token* tok;
 
 				s = pop_state(state);
 				destroy_json_state(s);
@@ -1182,14 +1193,14 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 		}
 
 		// left square bracket '['
-		else if (!jep_char_cmp(raw->chars[i], lsqr))
+		else if (!jep_char_cmp(raw->chars[i], JEP_CHAR_LSQR))
 		{
 			error = is_begin_array_error(state, list);
 
 			if (!error)
 			{
-				json_state* s;
-				json_token* tok;
+				jep_json_state* s;
+				jep_json_token* tok;
 
 				s = create_json_state(JSON_BEGIN_ARRAY);
 				push_state(state, s);
@@ -1208,8 +1219,8 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 
 			if (!error)
 			{
-				json_state* s;
-				json_token* tok;
+				jep_json_state* s;
+				jep_json_token* tok;
 
 				s = pop_state(state);
 				destroy_json_state(s);
@@ -1228,7 +1239,7 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 
 			if (!error)
 			{
-				json_token* tok;
+				jep_json_token* tok;
 
 				tok = create_json_token(JSON_TOKEN_COLON);
 				tok->str = jep_bytes_to_string(&colon_, enc, 1);
@@ -1244,7 +1255,7 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 
 			if (!error)
 			{
-				json_token* tok;
+				jep_json_token* tok;
 
 				tok = create_json_token(JSON_TOKEN_COMMA);
 				tok->str = jep_bytes_to_string(&comma_, enc, 1);
@@ -1260,8 +1271,8 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 
 			if (!error)
 			{
-				json_state* s;
-				json_token* stok;
+				jep_json_state* s;
+				jep_json_token* stok;
 				jep_char_buffer* cb;
 
 				s = create_json_state(JSON_BEGIN_STRING);
@@ -1274,7 +1285,7 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 				{
 					if (!jep_char_cmp(raw->chars[++i], quot))
 					{
-						json_state* s = pop_state(state);
+						jep_json_state* s = pop_state(state);
 						destroy_json_state(s);
 					}
 					else
@@ -1304,8 +1315,8 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 
 				if (!error)
 				{
-					json_state* s;
-					json_token* ntok;
+					jep_json_state* s;
+					jep_json_token* ntok;
 					jep_char_buffer* cb;
 
 					s = create_json_state(JSON_BEGIN_NUMBER);
@@ -1361,7 +1372,7 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 						}
 						else
 						{
-							json_state* s = pop_state(state);
+							jep_json_state* s = pop_state(state);
 							destroy_json_state(s);
 						}
 
@@ -1386,8 +1397,8 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 
 				if (!error)
 				{
-					json_state* s;
-					json_token* btok;
+					jep_json_state* s;
+					jep_json_token* btok;
 					jep_char_buffer* cb;
 
 					s = create_json_state(JSON_BEGIN_BOOLEAN);
@@ -1407,7 +1418,7 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 						}
 						else
 						{
-							json_state* s = pop_state(state);
+							jep_json_state* s = pop_state(state);
 							destroy_json_state(s);
 						}
 
@@ -1432,8 +1443,8 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 
 				if (!error)
 				{
-					json_state* s;
-					json_token* ntok;
+					jep_json_state* s;
+					jep_json_token* ntok;
 					jep_char_buffer* cb;
 
 					s = create_json_state(JSON_BEGIN_NULL);
@@ -1453,7 +1464,7 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 						}
 						else
 						{
-							json_state* s = pop_state(state);
+							jep_json_state* s = pop_state(state);
 							destroy_json_state(s);
 						}
 
@@ -1492,21 +1503,21 @@ static json_token* tokenize_json(jep_string* raw, int* err)
 	return list;
 }
 
-static json_object* parse_json(json_token** tokens)
+static jep_json_object* parse_json(jep_json_token** tokens)
 {
-	json_object* root = create_json_object();
-	json_object* cur_obj = root;
-	json_array* cur_array = NULL;
-	json_field* cur_field = NULL;
-	json_value* cur_value = NULL;
+	jep_json_object* root = create_json_object();
+	jep_json_object* cur_obj = root;
+	jep_json_array* cur_array = NULL;
+	jep_json_field* cur_field = NULL;
+	jep_json_value* cur_value = NULL;
 
 	if (root == NULL)
 		return NULL;
 
-	json_token* t = *tokens;
-	json_token* end = NULL;
+	jep_json_token* t = *tokens;
+	jep_json_token* end = NULL;
 
-	json_state* state = create_json_state(JSON_BEGIN);
+	jep_json_state* state = create_json_state(JSON_BEGIN);
 
 	while (t != NULL && end == NULL)
 	{
@@ -1515,26 +1526,26 @@ static json_object* parse_json(json_token** tokens)
 		{
 			if (state->top->state == JSON_BEGIN)
 			{
-				json_state* s = create_json_state(JSON_BEGIN_OBJECT);
+				jep_json_state* s = create_json_state(JSON_BEGIN_OBJECT);
 				push_state(state, s);
 			}
 			else if (state->top->state == JSON_BEGIN_FIELD && cur_field != NULL)
 			{
-				json_object* o = parse_json(&t);
+				jep_json_object* o = parse_json(&t);
 
 				cur_field->value->type = JSON_VALUE_OBJECT;
 				cur_field->value->data.obj = o;
 
 				append_field(cur_obj, cur_field);
 
-				json_state* s = pop_state(state);
+				jep_json_state* s = pop_state(state);
 				destroy_json_state(s);
 			}
 			else if (state->top->state == JSON_BEGIN_ARRAY && cur_field != NULL)
 			{
-				json_object* o = parse_json(&t);
+				jep_json_object* o = parse_json(&t);
 
-				json_value* v = create_json_value();
+				jep_json_value* v = create_json_value();
 				v->type = JSON_VALUE_OBJECT;
 				v->data.obj = o;
 
@@ -1545,7 +1556,7 @@ static json_object* parse_json(json_token** tokens)
 		{
 			if (state->top->state == JSON_BEGIN_OBJECT)
 			{
-				json_state* s = pop_state(state);
+				jep_json_state* s = pop_state(state);
 				destroy_json_state(s);
 			}
 
@@ -1557,10 +1568,10 @@ static json_object* parse_json(json_token** tokens)
 		{
 			if (state->top->state == JSON_BEGIN_FIELD && cur_field != NULL)
 			{
-				json_state* s = create_json_state(JSON_BEGIN_ARRAY);
+				jep_json_state* s = create_json_state(JSON_BEGIN_ARRAY);
 				push_state(state, s);
 
-				json_array* a = create_json_array();
+				jep_json_array* a = create_json_array();
 
 				cur_field->value->type = JSON_VALUE_ARRAY;
 				cur_field->value->data.arr = a;
@@ -1573,13 +1584,13 @@ static json_object* parse_json(json_token** tokens)
 				if (cur_field != NULL)
 					append_field(cur_obj, cur_field);
 
-				json_state* s = pop_state(state);
+				jep_json_state* s = pop_state(state);
 				destroy_json_state(s);
 			}
 
 			if (state->top->state == JSON_BEGIN_FIELD)
 			{
-				json_state* s = pop_state(state);
+				jep_json_state* s = pop_state(state);
 				destroy_json_state(s);
 			}
 		}
@@ -1589,9 +1600,9 @@ static json_object* parse_json(json_token** tokens)
 		{
 			if (state->top->state == JSON_BEGIN_OBJECT)
 			{
-				json_state* s;
-				json_field* f;
-				json_value* v;
+				jep_json_state* s;
+				jep_json_field* f;
+				jep_json_value* v;
 				jep_string* raw;
 
 				s = create_json_state(JSON_BEGIN_FIELD);
@@ -1611,7 +1622,7 @@ static json_object* parse_json(json_token** tokens)
 			}
 			else if (state->top->state == JSON_BEGIN_ARRAY && cur_field != NULL)
 			{
-				json_value* v;
+				jep_json_value* v;
 				jep_string* raw;
 
 				raw = jep_create_string(0);
@@ -1626,7 +1637,7 @@ static json_object* parse_json(json_token** tokens)
 			else if (state->top->state == JSON_BEGIN_FIELD && cur_field != NULL)
 			{
 				jep_string* raw;
-				json_state* s;
+				jep_json_state* s;
 
 				raw = jep_create_string(0);
 				jep_strcpy(t->str, raw);
@@ -1652,7 +1663,7 @@ static json_object* parse_json(json_token** tokens)
 					cur_field->value->type = JSON_VALUE_NULL;
 
 				jep_string* raw;
-				json_state* s;
+				jep_json_state* s;
 
 				raw = jep_create_string(0);
 
@@ -1669,7 +1680,7 @@ static json_object* parse_json(json_token** tokens)
 			}
 			else if (state->top->state == JSON_BEGIN_ARRAY && cur_field != NULL)
 			{
-				json_value* v;
+				jep_json_value* v;
 				jep_string* raw;
 
 				v = create_json_value();
@@ -1701,9 +1712,9 @@ static json_object* parse_json(json_token** tokens)
 	return root;
 }
 
-static void jep_print_json_tokens(json_token* list, FILE* f)
+static void jep_print_json_tokens(jep_json_token* list, FILE* f)
 {
-	json_token* tok = list;
+	jep_json_token* tok = list;
 
 	while (tok != NULL)
 	{
@@ -1750,20 +1761,19 @@ static void jep_print_json_tokens(json_token* list, FILE* f)
 			break;
 		}
 
-		//print_char_buffer(tok->cb, f);
-		printf("\n");
+		fprintf(f, "\n");
 
 		tok = tok->next;
 	}
 }
 
-static void destroy_json_token_list(json_token* list)
+static void destroy_json_token_list(jep_json_token* list)
 {
 	if (list == NULL)
 		return;
 
-	json_token* tok = list;
-	json_token* next;
+	jep_json_token* tok = list;
+	jep_json_token* next;
 
 	while (tok != NULL)
 	{
@@ -1780,19 +1790,20 @@ static void destroy_json_token_list(json_token* list)
 /*                    json.h Implementation                        */
 /*-----------------------------------------------------------------*/
 
-int jep_parse_json_string(jep_string* raw, json_object** obj)
+JEP_UTILS_API int JEP_UTILS_CALL
+jep_parse_json_string(jep_string* raw, jep_json_object** obj)
 {
 	if (raw == NULL)
 		return JSON_PARSE_ERR_NULL;
 
 	int err = 0;
 
-	json_token* tokens = tokenize_json(raw, &err);
+	jep_json_token* tokens = tokenize_json(raw, &err);
 
 	if (tokens == NULL)
 		return err;
 
-	json_object* o = parse_json(&tokens);
+	jep_json_object* o = parse_json(&tokens);
 
 	destroy_json_token_list(tokens);
 
@@ -1801,13 +1812,14 @@ int jep_parse_json_string(jep_string* raw, json_object** obj)
 	return 0;
 }
 
-void jep_destroy_json_object(json_object* o)
+JEP_UTILS_API void JEP_UTILS_CALL
+jep_destroy_json_object(jep_json_object* o)
 {
 	if (o == NULL)
 		return;
 
-	json_field* f = o->fields;
-	json_field* next = NULL;
+	jep_json_field* f = o->fields;
+	jep_json_field* next = NULL;
 
 	while (f != NULL)
 	{
@@ -1819,12 +1831,13 @@ void jep_destroy_json_object(json_object* o)
 	free(o);
 }
 
-json_field* jep_get_json_field(json_object* obj, jep_string* name)
+JEP_UTILS_API jep_json_field* JEP_UTILS_CALL
+jep_get_json_field(jep_json_object* obj, jep_string* name)
 {
 	if (obj == NULL || name == NULL)
 		return NULL;
 
-	json_field* f = obj->fields;
+	jep_json_field* f = obj->fields;
 
 	while (f != NULL)
 	{
