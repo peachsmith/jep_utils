@@ -49,7 +49,8 @@
 #define JSON_TOK_ERR_END_BOOLEAN   0x0E
 #define JSON_TOK_ERR_BEGIN_NULL    0x0F
 #define JSON_TOK_ERR_END_NULL      0x10
-#define JSON_TOK_ERR_UNEXPECTED    0x11
+#define JSON_TOK_ERR_ESCAPE        0x11
+#define JSON_TOK_ERR_UNEXPECTED    0x12
 
 /* parsing errors */
 #define JSON_PARSE_ERR_NULL 0x01
@@ -87,19 +88,7 @@
 #define JEP_CHAR_9      0x39
 #define JEP_CHAR_x      0x78
 #define JEP_CHAR_X      0x58
-
-static const jep_char nul = 0x00;
-static const jep_char lbrc = 0x7B;
-static const jep_char rbrc = 0x7D;
-static const jep_char lsqr = 0x5B;
-static const jep_char rsqr = 0x5D;
-static const jep_char quot = 0x22;
-static const jep_char colon = 0x3A;
-static const jep_char comma = 0x2C;
-static const jep_char period = 0x2E;
-static const jep_char lo_x = 0x78;
-static const jep_char hi_x = 0x58;
-static const jep_char zero = 0x30;
+#define JEP_CHAR_BSLASH 0x5C
 
 
 
@@ -223,6 +212,18 @@ static int is_whitespace(jep_char c);
 static int is_escape(jep_char c);
 
 /**
+ * Unescapes a character.
+ * For example, unescaping the 'n' character should result in '\n'.
+ *
+ * Params:
+ *   jep_char - a character
+ *
+ * Returns:
+ *   int - 1 if the character is escapable, otherwise 0
+ */
+static jep_char unescape(jep_char c);
+
+/**
  * Determines if a character is a valid number character.
  *
  * Params:
@@ -306,7 +307,7 @@ static int is_null_start(jep_char c);
  *   jep_char_buffer - a reference to the source buffer
  *   jep_char_buffer - a reference to the destination buffer
  */
-static void copy_char_buffer(jep_char_buffer* src, jep_char_buffer* dest);
+//static void copy_char_buffer(jep_char_buffer* src, jep_char_buffer* dest);
 
 
 
@@ -430,7 +431,7 @@ static jep_json_object* parse_json(jep_json_token** tokens);
  *   json_token* - a list of JSON tokens
  *   FILE* - a file pointer
  */
-static void jep_print_json_tokens(jep_json_token* list, FILE* f);
+//static void jep_print_json_tokens(jep_json_token* list, FILE* f);
 
 /**
  * Frees the memory allocated for a list of JSON tokens.
@@ -605,6 +606,18 @@ static int is_escape(jep_char c)
 		? 1 : 0;
 }
 
+static jep_char unescape(jep_char c)
+{
+	return c == 0x5C ? 0x5C // '\\'
+		: c == 0x74 ? 0x09  // 't'
+		: c == 0x6E ? 0x0A  // 'n'
+		: c == 0x72 ? 0x0D  // 'r'
+		: c == 0x62 ? 0x07  // 'b'
+		: c == 0x66 ? 0x0C  // 'f'
+		: c == 0x22 ? 0x22  // '"'
+		: 0;
+}
+
 static int is_number(jep_char c, int base)
 {
 	if (c > 0xFF)
@@ -724,20 +737,20 @@ static int is_null_start(jep_char c)
 //	}
 //}
 
-static void copy_char_buffer(jep_char_buffer* src, jep_char_buffer* dest)
-{
-	if (src == NULL || dest == NULL)
-		return;
+// static void copy_char_buffer(jep_char_buffer* src, jep_char_buffer* dest)
+// {
+// 	if (src == NULL || dest == NULL)
+// 		return;
 
-	if (src->buffer == NULL || dest->buffer == NULL)
-		return;
+// 	if (src->buffer == NULL || dest->buffer == NULL)
+// 		return;
 
-	jep_clear_char_buffer(dest);
+// 	jep_clear_char_buffer(dest);
 
-	size_t i;
-	for (i = 0; i < src->size; i++)
-		jep_append_char(dest, src->buffer[i]);
-}
+// 	size_t i;
+// 	for (i = 0; i < src->size; i++)
+// 		jep_append_char(dest, src->buffer[i]);
+// }
 
 
 
@@ -1140,15 +1153,14 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 	}
 
 	int error = 0;
-	char lbrc_ = '{';
-	char rbrc_ = '}';
-	char lsqr_ = '[';
-	char rsqr_ = ']';
-	char period_ = '.';
-	char comma_ = ',';
-	char colon_ = ':';
-	char quot_ = '"';
 	int enc = JEP_ENCODING_UTF_8;
+	jep_byte lbrc = JEP_CHAR_LBRC;
+	jep_byte rbrc = JEP_CHAR_RBRC;
+	jep_byte lsqr = JEP_CHAR_LSQR;
+	jep_byte rsqr = JEP_CHAR_RSQR;
+	jep_byte comma = JEP_CHAR_COMMA;
+	jep_byte colon = JEP_CHAR_COLON;
+	
 
 	for (i = 0; i < raw->size && !error; i++)
 	{
@@ -1166,7 +1178,7 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 				push_state(state, s);
 
 				tok = create_json_token(JSON_TOKEN_LBRACE);
-				tok->str = jep_bytes_to_string(&lbrc_, enc, 1);
+				tok->str = jep_bytes_to_string(&lbrc, enc, 1);
 
 				add_json_token(list, tok);
 			}
@@ -1186,7 +1198,7 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 				destroy_json_state(s);
 
 				tok = create_json_token(JSON_TOKEN_RBRACE);
-				tok->str = jep_bytes_to_string(&rbrc_, enc, 1);
+				tok->str = jep_bytes_to_string(&rbrc, enc, 1);
 
 				add_json_token(list, tok);
 			}
@@ -1206,14 +1218,14 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 				push_state(state, s);
 
 				tok = create_json_token(JSON_TOKEN_LSQUARE);
-				tok->str = jep_bytes_to_string(&lsqr_, enc, 1);
+				tok->str = jep_bytes_to_string(&lsqr, enc, 1);
 
 				add_json_token(list, tok);
 			}
 		}
 
 		// right square bracket ']'
-		else if (!jep_char_cmp(raw->chars[i], rsqr))
+		else if (!jep_char_cmp(raw->chars[i], JEP_CHAR_RSQR))
 		{
 			error = is_end_array_error(state, list);
 
@@ -1226,14 +1238,14 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 				destroy_json_state(s);
 
 				tok = create_json_token(JSON_TOKEN_RSQUARE);
-				tok->str = jep_bytes_to_string(&rsqr_, enc, 1);
+				tok->str = jep_bytes_to_string(&rsqr, enc, 1);
 
 				add_json_token(list, tok);
 			}
 		}
 
 		// colon ':'
-		else if (!jep_char_cmp(raw->chars[i], colon))
+		else if (!jep_char_cmp(raw->chars[i], JEP_CHAR_COLON))
 		{
 			error = is_colon_error(state, list);
 
@@ -1242,14 +1254,14 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 				jep_json_token* tok;
 
 				tok = create_json_token(JSON_TOKEN_COLON);
-				tok->str = jep_bytes_to_string(&colon_, enc, 1);
+				tok->str = jep_bytes_to_string(&colon, enc, 1);
 
 				add_json_token(list, tok);
 			}
 		}
 
 		// comma ','
-		else if (!jep_char_cmp(raw->chars[i], comma))
+		else if (!jep_char_cmp(raw->chars[i], JEP_CHAR_COMMA))
 		{
 			error = is_comma_error(state, list);
 
@@ -1258,14 +1270,14 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 				jep_json_token* tok;
 
 				tok = create_json_token(JSON_TOKEN_COMMA);
-				tok->str = jep_bytes_to_string(&comma_, enc, 1);
+				tok->str = jep_bytes_to_string(&comma, enc, 1);
 
 				add_json_token(list, tok);
 			}
 		}
 
 		// string
-		else if (!jep_char_cmp(raw->chars[i], quot))
+		else if (!jep_char_cmp(raw->chars[i], JEP_CHAR_QUOTE))
 		{
 			error = is_begin_string_error(state, list);
 
@@ -1283,10 +1295,21 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 
 				while (!error && i < raw->size - 1 && state->top->state == JSON_BEGIN_STRING)
 				{
-					if (!jep_char_cmp(raw->chars[++i], quot))
+					if (!jep_char_cmp(raw->chars[++i], JEP_CHAR_QUOTE))
 					{
 						jep_json_state* s = pop_state(state);
 						destroy_json_state(s);
+					}
+					else if (!jep_char_cmp(raw->chars[i], JEP_CHAR_BSLASH))
+					{
+						if (is_escape(jep_char_at(raw, i + 1)))
+						{
+							jep_append_char(cb, unescape(raw->chars[++i]));
+						}
+						else
+						{
+							error = JSON_TOK_ERR_ESCAPE;
+						}
 					}
 					else
 					{
@@ -1334,8 +1357,8 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 					int base = 10;
 
 					if (i < raw->size - 2
-						&& !jep_char_cmp(raw->chars[i], zero)
-						&& (!jep_char_cmp(raw->chars[i + 1], lo_x) || !jep_char_cmp(raw->chars[i + 1], hi_x)))
+						&& !jep_char_cmp(raw->chars[i], JEP_CHAR_0)
+						&& (!jep_char_cmp(raw->chars[i + 1], JEP_CHAR_x) || !jep_char_cmp(raw->chars[i + 1], JEP_CHAR_X)))
 					{
 						base = 16;
 					}
@@ -1344,7 +1367,7 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 					{
 						if (is_number(raw->chars[++i], base))
 						{
-							if (!jep_char_cmp(raw->chars[i], period))
+							if (!jep_char_cmp(raw->chars[i], JEP_CHAR_PERIOD))
 							{
 								if (!dec)
 								{
@@ -1356,7 +1379,7 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 								}
 							}
 
-							if ((!jep_char_cmp(raw->chars[i], lo_x) || !jep_char_cmp(raw->chars[i], hi_x)))
+							if ((!jep_char_cmp(raw->chars[i], JEP_CHAR_x) || !jep_char_cmp(raw->chars[i], JEP_CHAR_X)))
 							{
 								if (!hex)
 								{
@@ -1458,7 +1481,7 @@ static jep_json_token* tokenize_json(jep_string* raw, int* err)
 
 					while (!error && i < raw->size - 1 && state->top->state == JSON_BEGIN_NULL)
 					{
-						if (is_boolean(raw->chars[++i]))
+						if (is_null(raw->chars[++i]))
 						{
 							jep_append_char(cb, raw->chars[i]);
 						}
@@ -1507,9 +1530,9 @@ static jep_json_object* parse_json(jep_json_token** tokens)
 {
 	jep_json_object* root = create_json_object();
 	jep_json_object* cur_obj = root;
-	jep_json_array* cur_array = NULL;
+	//jep_json_array* cur_array = NULL;
 	jep_json_field* cur_field = NULL;
-	jep_json_value* cur_value = NULL;
+	//jep_json_value* cur_value = NULL;
 
 	if (root == NULL)
 		return NULL;
@@ -1712,60 +1735,60 @@ static jep_json_object* parse_json(jep_json_token** tokens)
 	return root;
 }
 
-static void jep_print_json_tokens(jep_json_token* list, FILE* f)
-{
-	jep_json_token* tok = list;
+// static void jep_print_json_tokens(jep_json_token* list, FILE* f)
+// {
+// 	jep_json_token* tok = list;
 
-	while (tok != NULL)
-	{
-		switch (tok->type)
-		{
-		case JSON_BEGIN:
-			fprintf(f, "%-10s", "[BEGIN]");
-			break;
-		case JSON_TOKEN_LBRACE:
-			fprintf(f, "%-10s", "[LBRACE]");
-			break;
-		case JSON_TOKEN_RBRACE:
-			fprintf(f, "%-10s", "[RBRACE]");
-			break;
-		case JSON_TOKEN_LSQUARE:
-			fprintf(f, "%-10s", "[LSQUARE]");
-			break;
-		case JSON_TOKEN_RSQUARE:
-			fprintf(f, "%-10s", "[RSQUARE]");
-			break;
-		case JSON_TOKEN_COMMA:
-			fprintf(f, "%-10s", "[COMMA]");
-			break;
-		case JSON_TOKEN_COLON:
-			fprintf(f, "%-10s", "[COLON]");
-			break;
-		case JSON_TOKEN_QUOTE:
-			fprintf(f, "%-10s", "[QUOTE]");
-			break;
-		case JSON_TOKEN_STRING:
-			fprintf(f, "%-10s", "[STRING]");
-			break;
-		case JSON_TOKEN_NUMBER:
-			fprintf(f, "%-10s", "[NUMBER]");
-			break;
-		case JSON_TOKEN_BOOLEAN:
-			fprintf(f, "%-10s", "[BOOLEAN]");
-			break;
-		case JSON_TOKEN_NULL:
-			fprintf(f, "%-10s", "[NULL]");
-			break;
-		default:
-			fprintf(f, "%-10s", "[UNKNOWN]");
-			break;
-		}
+// 	while (tok != NULL)
+// 	{
+// 		switch (tok->type)
+// 		{
+// 		case JSON_BEGIN:
+// 			fprintf(f, "%-10s", "[BEGIN]");
+// 			break;
+// 		case JSON_TOKEN_LBRACE:
+// 			fprintf(f, "%-10s", "[LBRACE]");
+// 			break;
+// 		case JSON_TOKEN_RBRACE:
+// 			fprintf(f, "%-10s", "[RBRACE]");
+// 			break;
+// 		case JSON_TOKEN_LSQUARE:
+// 			fprintf(f, "%-10s", "[LSQUARE]");
+// 			break;
+// 		case JSON_TOKEN_RSQUARE:
+// 			fprintf(f, "%-10s", "[RSQUARE]");
+// 			break;
+// 		case JSON_TOKEN_COMMA:
+// 			fprintf(f, "%-10s", "[COMMA]");
+// 			break;
+// 		case JSON_TOKEN_COLON:
+// 			fprintf(f, "%-10s", "[COLON]");
+// 			break;
+// 		case JSON_TOKEN_QUOTE:
+// 			fprintf(f, "%-10s", "[QUOTE]");
+// 			break;
+// 		case JSON_TOKEN_STRING:
+// 			fprintf(f, "%-10s", "[STRING]");
+// 			break;
+// 		case JSON_TOKEN_NUMBER:
+// 			fprintf(f, "%-10s", "[NUMBER]");
+// 			break;
+// 		case JSON_TOKEN_BOOLEAN:
+// 			fprintf(f, "%-10s", "[BOOLEAN]");
+// 			break;
+// 		case JSON_TOKEN_NULL:
+// 			fprintf(f, "%-10s", "[NULL]");
+// 			break;
+// 		default:
+// 			fprintf(f, "%-10s", "[UNKNOWN]");
+// 			break;
+// 		}
 
-		fprintf(f, "\n");
+// 		fprintf(f, "\n");
 
-		tok = tok->next;
-	}
-}
+// 		tok = tok->next;
+// 	}
+// }
 
 static void destroy_json_token_list(jep_json_token* list)
 {

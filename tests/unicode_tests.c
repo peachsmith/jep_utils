@@ -10,7 +10,7 @@ int utf8_decode_test()
 	};
 
 	jep_code_point* p;
-	int dec;
+	size_t dec;
 	int res;
 
 	p = jep_utf8_decode(data, 10, &dec);
@@ -91,7 +91,7 @@ int utf16_be_bom_decode_test()
 	};
 
 	jep_code_point* p;
-	int dec;
+	size_t dec;
 	int res;
 
 	p = jep_utf16_decode(data, 14, &dec);
@@ -175,7 +175,7 @@ int utf16_le_bom_decode_test()
 	};
 
 	jep_code_point* p;
-	int dec;
+	size_t dec;
 	int res;
 
 	p = jep_utf16_decode(data, 14, &dec);
@@ -209,7 +209,7 @@ int utf16_be_decode_test()
 	};
 
 	jep_code_point* p;
-	int dec;
+	size_t dec;
 	int res;
 
 	p = jep_utf16be_decode(data, 12, &dec);
@@ -290,7 +290,7 @@ int utf16_le_decode_test()
 	};
 
 	jep_code_point* p;
-	int dec;
+	size_t dec;
 	int res;
 
 	p = jep_utf16le_decode(data, 12, &dec);

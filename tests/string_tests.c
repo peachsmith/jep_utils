@@ -41,7 +41,7 @@ int bytes_to_string_test()
 	int res = 1;
 	int enc = JEP_ENCODING_UTF_8;
 
-	str = jep_bytes_to_string(c_str, enc, strlen(c_str));
+	str = jep_bytes_to_string((const jep_byte*)c_str, enc, strlen(c_str));
 
 	if (str == NULL)
 		return 0;
@@ -275,12 +275,12 @@ int string_compare_less_test()
 	const char* c_str_a = "abc";
 	const char* c_str_b = "abd";
 
-	a = jep_bytes_to_string(c_str_a, enc, strlen(c_str_a));
+	a = jep_bytes_to_string((const jep_byte*)c_str_a, enc, strlen(c_str_a));
 
 	if (a == NULL)
 		return 0;
 
-	b = jep_bytes_to_string(c_str_b, enc, strlen(c_str_b));
+	b = jep_bytes_to_string((const jep_byte*)c_str_b, enc, strlen(c_str_b));
 
 	if (b == NULL)
 	{
@@ -306,12 +306,12 @@ int string_compare_greater_test()
 	const char* c_str_a = "abd";
 	const char* c_str_b = "abc";
 
-	a = jep_bytes_to_string(c_str_a, enc, strlen(c_str_a));
+	a = jep_bytes_to_string((const jep_byte*)c_str_a, enc, strlen(c_str_a));
 
 	if (a == NULL)
 		return 0;
 
-	b = jep_bytes_to_string(c_str_b, enc, strlen(c_str_b));
+	b = jep_bytes_to_string((const jep_byte*)c_str_b, enc, strlen(c_str_b));
 
 	if (b == NULL)
 	{
@@ -337,12 +337,12 @@ int string_compare_equal_test()
 	const char* c_str_a = "abc";
 	const char* c_str_b = "abc";
 
-	a = jep_bytes_to_string(c_str_a, enc, strlen(c_str_a));
+	a = jep_bytes_to_string((const jep_byte*)c_str_a, enc, strlen(c_str_a));
 
 	if (a == NULL)
 		return 0;
 
-	b = jep_bytes_to_string(c_str_b, enc, strlen(c_str_b));
+	b = jep_bytes_to_string((const jep_byte*)c_str_b, enc, strlen(c_str_b));
 
 	if (b == NULL)
 	{
@@ -366,7 +366,7 @@ int string_to_int_test()
 	int enc = JEP_ENCODING_UTF_8;
 	int res;
 
-	str = jep_bytes_to_string(bytes, enc, strlen(bytes));
+	str = jep_bytes_to_string((const jep_byte*)bytes, enc, strlen(bytes));
 
 	if (str == NULL)
 		return 0;
@@ -388,7 +388,7 @@ int string_to_uint_test()
 	int enc = JEP_ENCODING_UTF_8;
 	int res;
 
-	str = jep_bytes_to_string(bytes, enc, strlen(bytes));
+	str = jep_bytes_to_string((const jep_byte*)bytes, enc, strlen(bytes));
 
 	if (str == NULL)
 		return 0;
@@ -410,7 +410,7 @@ int string_to_long_test()
 	int enc = JEP_ENCODING_UTF_8;
 	int res;
 
-	str = jep_bytes_to_string(bytes, enc, strlen(bytes));
+	str = jep_bytes_to_string((const jep_byte*)bytes, enc, strlen(bytes));
 
 	if (str == NULL)
 		return 0;
@@ -432,7 +432,7 @@ int string_to_ulong_test()
 	int enc = JEP_ENCODING_UTF_8;
 	int res;
 
-	str = jep_bytes_to_string(bytes, enc, strlen(bytes));
+	str = jep_bytes_to_string((const jep_byte*)bytes, enc, strlen(bytes));
 
 	if (str == NULL)
 		return 0;

@@ -1262,7 +1262,6 @@ static void write_huff_data(jep_bitstring* data, jep_byte_buffer* bb)
 	uint32_t bit_count;    // Number of bits in the bitstring
 	uint32_t byte_count;   // Number of bytes in the bitstring
 	jep_byte current_bits; // Number of occupied bits in the last byte
-	jep_byte* bytes;       // Bytes in the bitstring
 
 
 	pos = 0;
@@ -1271,7 +1270,6 @@ static void write_huff_data(jep_bitstring* data, jep_byte_buffer* bb)
 	bit_count = data->bit_count;
 	byte_count = data->byte_count;
 	current_bits = data->current_bits;
-	bytes = data->bytes;
 
 	// Write the data_begin metadata to signify that we're
 	// about to write the encoded bitstring data.
@@ -1314,10 +1312,9 @@ static jep_huff_dict* read_huff_dict(jep_byte_buffer* data, size_t* pos)
 	jep_byte b;          // An unsigned 8-bit integer
 	size_t s;            // The size of 1 byte. This should always be 1.
 
-	uint32_t bit_count;    // Number of bits in the bitstring
-	uint32_t byte_count;   // Number of bytes in the bitstring
-	jep_byte current_bits; // Number of occupied bits in the last byte
-	jep_byte* bytes;       // Bytes in the bitstring
+	uint32_t bit_count;  // Number of bits in the bitstring
+	uint32_t byte_count; // Number of bytes in the bitstring
+	jep_byte* bytes;     // Bytes in the bitstring
 
 
 	cap = 10;
@@ -1353,7 +1350,7 @@ static jep_huff_dict* read_huff_dict(jep_byte_buffer* data, size_t* pos)
 		{
 			// If the previous byte was the dict_byte metadata,
 			// then the next byte will be the value of a symbol.
-			if (res = read_from_buffer(&b, data, s, pos))
+			if ((res = read_from_buffer(&b, data, s, pos)))
 				sym.b = b;
 		}
 		else if (res && b == dict_code)
@@ -1389,7 +1386,6 @@ static jep_huff_dict* read_huff_dict(jep_byte_buffer* data, size_t* pos)
 
 			// Read the number of bits occupied in the last byte.
 			res = read_from_buffer(&b, data, s, pos);
-			current_bits = b;
 
 			// Allocate a new array of bytes.
 			bytes = jep_alloc(jep_byte, byte_count);
@@ -1460,7 +1456,6 @@ static jep_bitstring* read_huff_data(jep_byte_buffer* data, size_t* pos)
 	jep_byte u32buff[4]; // Buffer for holding an unsigned 32-bit integer
 	uint32_t u32;        // An unsigned 32-bit integer
 	jep_byte b;          // An unsigned 8-bit integer
-	size_t res;          // The result of read operations
 	size_t s;            // The size of 1 byte. This should always be 1.
 
 
@@ -1472,11 +1467,11 @@ static jep_bitstring* read_huff_data(jep_byte_buffer* data, size_t* pos)
 
 	u32 = 0;
 	b = 0;
-	res = 1;
+	//res = 1;
 	s = sizeof(jep_byte);
 
 	// Read the first byte from the buffer.
-	res = read_from_buffer(&b, data, s, pos);
+	read_from_buffer(&b, data, s, pos);
 
 	// Verify that the first byte was the data_begin metadata.
 	if (b == data_begin)
@@ -1499,7 +1494,7 @@ static jep_bitstring* read_huff_data(jep_byte_buffer* data, size_t* pos)
 		bs->bytes = jep_alloc(jep_byte, bs->byte_count);
 
 		// Read the bitstring data.
-		res = read_from_buffer(bs->bytes, data, bs->byte_count, pos);
+		read_from_buffer(bs->bytes, data, bs->byte_count, pos);
 	}
 
 	return bs;
@@ -1545,16 +1540,14 @@ static int write_to_buffer(const jep_byte* src,
 	size_t n,
 	size_t* pos)
 {
-	size_t i;     // Index
-	size_t start; // Position in output stream
-	int result;   // Number of bytes written to output buffer
+	size_t i;   // Index
+	int result; // Number of bytes written to output buffer
 
 
 	// Ensure that the source and destination are not NULL.
 	if (dest == NULL || dest->buffer == NULL || src == NULL)
 		return 0;
 
-	start = *pos;
 	result = 0;
 
 	// Ensure that the current position is not greater

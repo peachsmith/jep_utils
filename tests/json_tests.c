@@ -23,7 +23,8 @@ int json_parse_test()
 	jep_destroy_string(jstr);
 	jep_destroy_json_object(jobj);
 
-	return 1;
+	// jep_parse_json_string returns 0 on success
+	return !parsed;
 }
 
 int json_field_test()
@@ -63,7 +64,9 @@ int json_field_test()
 
 	jfield = jep_get_json_field(jobj, fstr);
 
-	if (jfield == NULL)
+	if (parsed)
+		res = 0;
+	else if (jfield == NULL)
 		res = 0;
 	else if (jfield->value == NULL)
 		res = 0;

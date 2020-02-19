@@ -57,7 +57,7 @@ jep_destroy_string(jep_string* str);
  *   jep_string - a string or NULL on failure
  */
 JEP_UTILS_API jep_string* JEP_UTILS_CALL
-jep_bytes_to_string(const char* bytes, int encoding, size_t n);
+jep_bytes_to_string(const jep_byte* bytes, int encoding, size_t n);
 
 /**
  * Converts an array of characters into a string.
@@ -114,6 +114,21 @@ jep_strcpy(jep_string* src, jep_string* dest);
  */
 JEP_UTILS_API jep_string* JEP_UTILS_CALL
 jep_new_string(const char* lit);
+
+/**
+ * Retrieves the value of a character at the specified index in a string.
+ * If the index is out of bounds, then an out-of-range sentinel code point
+ * is returned.
+ * 
+ * Params:
+ *   jep_string* - a string
+ *   size_t - an index
+ * 
+ * Returns:
+ *   jep_char - the character at index i or a code point greater than U+10FFFF
+ */
+JEP_UTILS_API jep_char JEP_UTILS_CALL
+jep_char_at(jep_string* str, size_t i);
 
 /**
  * Converts a string into a primitive long.

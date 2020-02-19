@@ -47,7 +47,7 @@ jep_destroy_string(jep_string* str)
 }
 
 JEP_UTILS_API jep_string* JEP_UTILS_CALL
-jep_bytes_to_string(const char* bytes, int encoding, size_t n)
+jep_bytes_to_string(const jep_byte* bytes, int encoding, size_t n)
 {
 	jep_string* str;
 	jep_code_point* pts;
@@ -161,10 +161,10 @@ jep_strcpy(jep_string* src, jep_string* dest)
 		return 0;
 
 	size_t i;
-	jep_char* dchars;
+	//jep_char* dchars;
 	jep_char* nchars;
 
-	dchars = dest->chars;
+	//dchars = dest->chars;
 
 	// make sure we have a destination buffer
 	if (dest->chars == NULL)
@@ -202,7 +202,13 @@ jep_strcpy(jep_string* src, jep_string* dest)
 JEP_UTILS_API jep_string* JEP_UTILS_CALL
 jep_new_string(const char* lit)
 {
-	return jep_bytes_to_string(lit, JEP_ENCODING_UTF_8, strlen(lit));
+	return jep_bytes_to_string((const jep_byte*)lit, JEP_ENCODING_UTF_8, strlen(lit));
+}
+
+JEP_UTILS_API jep_char JEP_UTILS_CALL
+jep_char_at(jep_string* str, size_t i)
+{
+	return i < str->size ? str->chars[i] : JEP_CHAR_NONE;
 }
 
 JEP_UTILS_API long JEP_UTILS_CALL
