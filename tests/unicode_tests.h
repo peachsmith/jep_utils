@@ -1,9 +1,7 @@
 #ifndef JEP_UNICODE_TESTS_H
 #define JEP_UNICODE_TESTS_H
 
-#include "jep_utils/unicode.h"
-
-#include "unicode_tests.h"
+#include "jep_utils.h"
 
 int utf8_decode_test();
 

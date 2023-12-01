@@ -1,24 +1,7 @@
 #ifndef JEP_UNICODE_H
 #define JEP_UNICODE_H
 
-#include "jep_utils.h"
-
-
-
-
-/**
- * A Unicode code point.
- * As of writing, the highest Unicode code point is U+10FFFF, which can fit
- * into three bytes. The characters in the basic multilingual plane (BMP) can
- * be represented using two bytes.
- * Therefore, an unsigned 32-bit integer is used to represent all Unicode
- * code points.
- *
- */
-typedef uint32_t jep_code_point;
-
-
-
+#include "jep_core.h"
 
 /**
  * Decodes an array of UTF-8 encoded bytes to a string of characters.
@@ -33,8 +16,8 @@ typedef uint32_t jep_code_point;
  * Returns:
  *   jep_char* - an array of characters or NULL on failure
  */
-JEP_UTILS_API jep_code_point* JEP_UTILS_CALL
-jep_utf8_decode(const jep_byte* bytes, size_t n, size_t* res);
+JEP_UTILS_API jep_code_point *JEP_UTILS_CALL
+jep_utf8_decode(const jep_byte *bytes, size_t n, size_t *res);
 
 /**
  * Encodes a string of text with the UTF-8 character encoding.
@@ -49,8 +32,8 @@ jep_utf8_decode(const jep_byte* bytes, size_t n, size_t* res);
  * Returns:
  *   jep_byte* - an array of bytes encoded with UTF-8.
  */
-JEP_UTILS_API jep_byte* JEP_UTILS_CALL
-jep_utf8_encode(const jep_code_point* str, size_t n, size_t* res);
+JEP_UTILS_API jep_byte *JEP_UTILS_CALL
+jep_utf8_encode(const jep_code_point *str, size_t n, size_t *res);
 
 /**
  * Encodes a string of text with the UTF-16 character encoding.
@@ -70,8 +53,13 @@ jep_utf8_encode(const jep_code_point* str, size_t n, size_t* res);
  * Returns:
  *   jep_byte* - an array of bytes encoded with UTF-16.
  */
-JEP_UTILS_API jep_byte* JEP_UTILS_CALL
-jep_utf16_encode(const jep_code_point* str, size_t n, size_t* res, int e, int bom);
+JEP_UTILS_API jep_byte *JEP_UTILS_CALL
+jep_utf16_encode(
+    const jep_code_point *str,
+    size_t n,
+    size_t *res,
+    int e,
+    int bom);
 
 /**
  * Encodes a string of text with the UTF-16BE character encoding.
@@ -89,8 +77,8 @@ jep_utf16_encode(const jep_code_point* str, size_t n, size_t* res, int e, int bo
  * Returns:
  *   jep_byte* - an array of bytes encoded with UTF-16.
  */
-JEP_UTILS_API jep_byte* JEP_UTILS_CALL
-jep_utf16be_encode(const jep_code_point* str, size_t n, size_t* res);
+JEP_UTILS_API jep_byte *JEP_UTILS_CALL
+jep_utf16be_encode(const jep_code_point *str, size_t n, size_t *res);
 
 /**
  * Encodes a string of text with the UTF-16LE character encoding.
@@ -108,8 +96,8 @@ jep_utf16be_encode(const jep_code_point* str, size_t n, size_t* res);
  * Returns:
  *   jep_byte* - an array of bytes encoded with UTF-16.
  */
-JEP_UTILS_API jep_byte* JEP_UTILS_CALL
-jep_utf16le_encode(const jep_code_point* str, size_t n, size_t* res);
+JEP_UTILS_API jep_byte *JEP_UTILS_CALL
+jep_utf16le_encode(const jep_code_point *str, size_t n, size_t *res);
 
 /**
  * Decodes an array of UTF-16 encoded bytes to a string of characters.
@@ -124,8 +112,8 @@ jep_utf16le_encode(const jep_code_point* str, size_t n, size_t* res);
  * Returns:
  *   jep_char* - an array of characters or NULL on failure
  */
-JEP_UTILS_API jep_code_point* JEP_UTILS_CALL
-jep_utf16_decode(const jep_byte* bytes, size_t n, size_t* res);
+JEP_UTILS_API jep_code_point *JEP_UTILS_CALL
+jep_utf16_decode(const jep_byte *bytes, size_t n, size_t *res);
 
 /**
  * Decodes an array of UTF-16BE encoded bytes to a string of characters.
@@ -138,8 +126,8 @@ jep_utf16_decode(const jep_byte* bytes, size_t n, size_t* res);
  * Returns:
  *   jep_char* - an array of characters or NULL on failure
  */
-JEP_UTILS_API jep_code_point* JEP_UTILS_CALL
-jep_utf16be_decode(const jep_byte* bytes, size_t n, size_t* res);
+JEP_UTILS_API jep_code_point *JEP_UTILS_CALL
+jep_utf16be_decode(const jep_byte *bytes, size_t n, size_t *res);
 
 /**
  * Decodes an array of UTF-16LE encoded bytes to a string of characters.
@@ -152,7 +140,7 @@ jep_utf16be_decode(const jep_byte* bytes, size_t n, size_t* res);
  * Returns:
  *   jep_char* - an array of characters or NULL on failure
  */
-JEP_UTILS_API jep_code_point* JEP_UTILS_CALL
-jep_utf16le_decode(const jep_byte* bytes, size_t n, size_t* res);
+JEP_UTILS_API jep_code_point *JEP_UTILS_CALL
+jep_utf16le_decode(const jep_byte *bytes, size_t n, size_t *res);
 
 #endif

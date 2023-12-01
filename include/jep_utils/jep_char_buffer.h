@@ -1,11 +1,7 @@
 #ifndef JEP_CHAR_BUFFER_H
 #define JEP_CHAR_BUFFER_H
 
-#include "jep_utils.h"
-#include "character.h"
-
-
-
+#include "jep_core.h"
 
 /**
  * A character buffer is a method of maintaining a dynamically allocated
@@ -17,14 +13,12 @@
  *   clear  - empties the buffer of all contents
  *
  */
-typedef struct jep_char_buffer {
+typedef struct jep_char_buffer
+{
     size_t size;
     size_t cap;
-    jep_char* buffer;
-}jep_char_buffer;
-
-
-
+    jep_char *buffer;
+} jep_char_buffer;
 
 /**
  * Allocates resources for a new char buffer.
@@ -33,7 +27,7 @@ typedef struct jep_char_buffer {
  * Returns:
  *   jep_char_buffer - a new char buffer
  */
-JEP_UTILS_API jep_char_buffer* JEP_UTILS_CALL
+JEP_UTILS_API jep_char_buffer *JEP_UTILS_CALL
 jep_create_char_buffer();
 
 /**
@@ -43,7 +37,7 @@ jep_create_char_buffer();
  *   jep_char_buffer - the char buffer to be destroyed
  */
 JEP_UTILS_API void JEP_UTILS_CALL
-jep_destroy_char_buffer(jep_char_buffer* bb);
+jep_destroy_char_buffer(jep_char_buffer *bb);
 
 /**
  * Appends a char to a char buffer.
@@ -57,7 +51,7 @@ jep_destroy_char_buffer(jep_char_buffer* bb);
  *   int - an integer indicating success or failure
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_append_char(jep_char_buffer* cb, jep_char c);
+jep_append_char(jep_char_buffer *cb, jep_char c);
 
 /**
  * Appends a char to a char buffer.
@@ -72,7 +66,7 @@ jep_append_char(jep_char_buffer* cb, jep_char c);
  *   int - an integer indicating the number of chars added
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_append_chars(jep_char_buffer* cb, jep_char* c, int n);
+jep_append_chars(jep_char_buffer *cb, jep_char *c, int n);
 
 /**
  * Removes a character at the specified index
@@ -82,7 +76,7 @@ jep_append_chars(jep_char_buffer* cb, jep_char* c, int n);
  *   size_t - the index of the character to remove
  */
 JEP_UTILS_API void JEP_UTILS_CALL
-jep_remove_char_at(jep_char_buffer* cb, size_t index);
+jep_remove_char_at(jep_char_buffer *cb, size_t index);
 
 /**
  * Removes all bytes from a byte buffer and reallocates
@@ -95,6 +89,6 @@ jep_remove_char_at(jep_char_buffer* cb, size_t index);
  *   int - 1 on success or 0 on failure
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_clear_char_buffer(jep_char_buffer* cb);
+jep_clear_char_buffer(jep_char_buffer *cb);
 
 #endif

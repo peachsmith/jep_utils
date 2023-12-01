@@ -1,29 +1,7 @@
 #ifndef JEP_BITSTRING_H
 #define JEP_BITSTRING_H
 
-#include "jep_utils.h"
-
-
-
-
-/**
- * A bit string is a sequence of bits.
- *
- * A bit string can have the following operations performed on itself:
- *   add - adds a bit or bits to the end of the sequence
- *   get - gets the value of a bit at a particular index
- *   set - sets the value of a bit at a particular index
- *   pop - removes the last bit of a sequence
- */
-typedef struct jep_bitstring {
-	uint32_t bit_count;
-	uint32_t byte_count;
-	jep_byte* bytes;
-	jep_byte current_bits;
-}jep_bitstring;
-
-
-
+#include "jep_core.h"
 
 /**
  * Creates a new bitstring.
@@ -31,7 +9,7 @@ typedef struct jep_bitstring {
  * Returns:
  *   jep_bitstring - a new bitstring
  */
-JEP_UTILS_API jep_bitstring* JEP_UTILS_CALL
+JEP_UTILS_API jep_bitstring *JEP_UTILS_CALL
 jep_create_bitstring();
 
 /**
@@ -41,7 +19,7 @@ jep_create_bitstring();
  *   jep_bitstring - a bitstring
  */
 JEP_UTILS_API void JEP_UTILS_CALL
-jep_destroy_bitstring(jep_bitstring* bs);
+jep_destroy_bitstring(jep_bitstring *bs);
 
 /**
  * Adds a bit to a bitstring.
@@ -54,7 +32,7 @@ jep_destroy_bitstring(jep_bitstring* bs);
  *   int - 1 on success or 0 on failure
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_add_bit(jep_bitstring* bs, unsigned int bit);
+jep_add_bit(jep_bitstring *bs, unsigned int bit);
 
 /**
  * Adds the contents of one bitstring to another.
@@ -67,7 +45,7 @@ jep_add_bit(jep_bitstring* bs, unsigned int bit);
  *   int - the number of bits successfully added
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_add_bits(jep_bitstring* dest, jep_bitstring* src);
+jep_add_bits(jep_bitstring *dest, jep_bitstring *src);
 
 /**
  * Retrieves the bit value stored at the specifide index
@@ -82,7 +60,7 @@ jep_add_bits(jep_bitstring* dest, jep_bitstring* src);
  *         -1 on failure
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_get_bit(jep_bitstring* bs, int index);
+jep_get_bit(jep_bitstring *bs, int index);
 
 /**
  * Sets the bit value stored at the specifide index
@@ -94,7 +72,7 @@ jep_get_bit(jep_bitstring* bs, int index);
  *   unsigned int - the new bit value
  */
 JEP_UTILS_API void JEP_UTILS_CALL
-jep_set_bit(jep_bitstring* bs, int index, unsigned int value);
+jep_set_bit(jep_bitstring *bs, int index, unsigned int value);
 
 /**
  * Removes the last bit from a bitstring.
@@ -104,6 +82,6 @@ jep_set_bit(jep_bitstring* bs, int index, unsigned int value);
  *   jep_bitstring - a bitstring
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_pop_bit(jep_bitstring* bs);
+jep_pop_bit(jep_bitstring *bs);
 
 #endif

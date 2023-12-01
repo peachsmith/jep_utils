@@ -1,29 +1,7 @@
 #ifndef JEP_CHARACTER_H
 #define JEP_CHARACTER_H
 
-#include "jep_utils.h"
-#include "unicode.h"
-
-
-
-
-/**
- * The value 0xC00000 is an out-of-range code point used to indicate the
- * absence of a character.
- */
-#define JEP_CHAR_NONE 0xC00000
-
-
-
-
-/**
- * A character is an individual element of a string.
- * The numeric value of a character is equivalent to a Unicode code point.
- */
-typedef jep_code_point jep_char;
-
-
-
+#include "jep_core.h"
 
 /**
  * Determines if two characters (a and b) represent the same Unicode

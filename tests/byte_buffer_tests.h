@@ -1,7 +1,7 @@
 #ifndef JEP_BYTE_BUFFER_TESTS_H
 #define JEP_BYTE_BUFFER_TESTS_H
 
-#include "jep_utils/byte_buffer.h"
+#include "jep_utils.h"
 
 int byte_buffer_create_test();
 

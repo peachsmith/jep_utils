@@ -1,7 +1,7 @@
 #ifndef JEP_HUFFMAN_TESTS_H
 #define JEP_HUFFMAN_TESTS_H
 
-#include "jep_utils/huffman.h"
+#include "jep_utils.h"
 
 int huff_encode_test();
 

@@ -1,7 +1,7 @@
 #ifndef JEP_CHAR_BUFFER_TESTS_H
 #define JEP_CHAR_BUFFER_TESTS_H
 
-#include "jep_utils/char_buffer.h"
+#include "jep_utils.h"
 
 int char_buffer_create_test();
 

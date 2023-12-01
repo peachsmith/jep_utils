@@ -1,7 +1,7 @@
 #ifndef JEP_STRING_TESTS_H
 #define JEP_STRING_TESTS_H
 
-#include "jep_utils/string.h"
+#include "jep_utils.h"
 
 // 16 tests
 

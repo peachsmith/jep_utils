@@ -1,29 +1,7 @@
 #ifndef JEP_BYTE_BUFFER_H
 #define JEP_BYTE_BUFFER_H
 
-#include "jep_utils.h"
-
-
-
-
-/**
- * A byte buffer is a method of maintaining a dynamically allocated
- * collection of bytes.
- *
- * A byte buffer can have the following operations performed on itself:
- *   append - adds a new byte or bytes to the end of the buffer
- *   remove - removes a byte from a certain point in the buffer
- *   clear  - empties the buffer of all contents
- *
- */
-typedef struct jep_byte_buffer {
-    size_t size;
-    size_t cap;
-    jep_byte* buffer;
-}jep_byte_buffer;
-
-
-
+#include "jep_core.h"
 
 /**
  * Allocates resources for a new byte buffer.
@@ -32,7 +10,7 @@ typedef struct jep_byte_buffer {
  * Returns:
  *   jep_byte_buffer - a new byte buffer
  */
-JEP_UTILS_API jep_byte_buffer* JEP_UTILS_CALL
+JEP_UTILS_API jep_byte_buffer *JEP_UTILS_CALL
 jep_create_byte_buffer();
 
 /**
@@ -42,7 +20,7 @@ jep_create_byte_buffer();
  *   jep_byte_buffer - the byte buffer to be destroyed
  */
 JEP_UTILS_API void JEP_UTILS_CALL
-jep_destroy_byte_buffer(jep_byte_buffer* bb);
+jep_destroy_byte_buffer(jep_byte_buffer *bb);
 
 /**
  * Appends a byte to a byte buffer.
@@ -56,7 +34,7 @@ jep_destroy_byte_buffer(jep_byte_buffer* bb);
  *   int - an integer indicating success or failure
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_append_byte(jep_byte_buffer* bb, jep_byte b);
+jep_append_byte(jep_byte_buffer *bb, jep_byte b);
 
 /**
  * Appends a byte to a byte buffer.
@@ -71,7 +49,7 @@ jep_append_byte(jep_byte_buffer* bb, jep_byte b);
  *   int - an integer indicating the number of bytes added
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_append_bytes(jep_byte_buffer* bb, jep_byte* b, int n);
+jep_append_bytes(jep_byte_buffer *bb, jep_byte *b, int n);
 
 /**
  * Removes a byte at the specified index
@@ -81,7 +59,7 @@ jep_append_bytes(jep_byte_buffer* bb, jep_byte* b, int n);
  *   size_t - the index of the character to remove
  */
 JEP_UTILS_API void JEP_UTILS_CALL
-jep_remove_byte_at(jep_byte_buffer* bb, size_t index);
+jep_remove_byte_at(jep_byte_buffer *bb, size_t index);
 
 /**
  * Removes all bytes from a byte buffer and reallocates
@@ -94,6 +72,6 @@ jep_remove_byte_at(jep_byte_buffer* bb, size_t index);
  *   int - 1 on success or 0 on failure
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_clear_byte_buffer(jep_byte_buffer* bb);
+jep_clear_byte_buffer(jep_byte_buffer *bb);
 
 #endif
