@@ -4,6 +4,7 @@ jep_string *jep_create_string(size_t size)
 {
     jep_string *str;
     jep_char *chars;
+    char *c_chars;
 
     str = (jep_string *)malloc(sizeof(jep_string));
 
@@ -12,18 +13,29 @@ jep_string *jep_create_string(size_t size)
 
     str->size = size;
     str->chars = NULL;
+    str->c_buf = NULL;
 
     if (size > 0)
     {
+        // number of jep_char elements == size
         chars = (jep_char *)malloc(sizeof(jep_char) * size);
-
         if (chars == NULL)
         {
             free(str);
             return NULL;
         }
-
         str->chars = chars;
+
+        // number of char elements == sizeof(jep_char) * size + 1
+        // We add 1 element for the NUL terminator.
+        c_chars = (char *)malloc(sizeof(jep_char) * size + 1);
+        if (c_chars == NULL)
+        {
+            free(chars);
+            free(str);
+            return NULL;
+        }
+        str->c_buf = c_chars;
     }
 
     return str;
@@ -36,6 +48,9 @@ void jep_destroy_string(jep_string *str)
 
     if (str->chars != NULL)
         free(str->chars);
+
+    if (str->c_buf != NULL)
+        free(str->c_buf);
 
     free(str);
 }
@@ -88,8 +103,19 @@ jep_string *jep_bytes_to_string(const jep_byte *bytes, int encoding, size_t n)
         return NULL;
     }
 
+    // number of char elements == sizeof(jep_char) * size + 1
+    // We add 1 element for the NUL terminator.
+    char *c_chars = (char *)malloc(sizeof(jep_char) * n + 1);
+    if (c_chars == NULL)
+    {
+        jep_destroy_string(str);
+        free(pts);
+        return NULL;
+    }
+
     str->size = res;
     str->chars = pts;
+    str->c_buf = c_chars;
 
     return str;
 }
@@ -153,10 +179,8 @@ int jep_strcpy(jep_string *src, jep_string *dest)
         return 0;
 
     size_t i;
-    // jep_char* dchars;
     jep_char *nchars;
-
-    // dchars = dest->chars;
+    char *ncstr;
 
     // make sure we have a destination buffer
     if (dest->chars == NULL)
@@ -169,6 +193,15 @@ int jep_strcpy(jep_string *src, jep_string *dest)
         dest->size = src->size;
     }
 
+    // make sure we have a C string buffer in the destination
+    if (dest->c_buf == NULL)
+    {
+        dest->c_buf = (char *)malloc(sizeof(jep_char) * src->size + 1);
+
+        if (dest->c_buf == NULL)
+            return 0;
+    }
+
     // make sure that the destination buffer size is equal to the
     // source buffer size.
     if (src->size != dest->size)
@@ -177,6 +210,13 @@ int jep_strcpy(jep_string *src, jep_string *dest)
 
         if (nchars != NULL)
             dest->chars = nchars;
+        else
+            return 0;
+
+        ncstr = jep_realloc(dest->chars, char, sizeof(jep_char) * src->size + 1);
+
+        if (ncstr != NULL)
+            dest->c_buf = ncstr;
         else
             return 0;
 
@@ -415,4 +455,30 @@ double jep_string_to_double(jep_string *str)
     free(buffer);
 
     return d;
+}
+
+const char *jep_c_str(jep_string *str)
+{
+    const char *c_str = NULL;
+    size_t end = 0;
+    size_t jchar_size = sizeof(jep_char);
+
+    for (size_t i = 0; i < str->size; i++)
+    {
+        size_t offset = 0;
+        for (size_t j = jchar_size; j > 0; j--)
+        {
+            char c = ((str->chars[i] >> ((j - 1) * CHAR_BIT)) & UCHAR_MAX);
+            if (c)
+            {
+                str->c_buf[end++] = c;
+            }
+        }
+    }
+
+    str->c_buf[end] = '\0';
+
+    c_str = str->c_buf;
+
+    return c_str;
 }

@@ -22,7 +22,7 @@ JEP_UTILS_API void JEP_UTILS_CALL
 jep_destroy_bitstring(jep_bitstring *bs);
 
 /**
- * Adds a bit to a bitstring.
+ * Appends a bit to a bitstring.
  *
  * Params:
  *   jep_bitstring - a bitstring to receive the new bit
@@ -32,10 +32,11 @@ jep_destroy_bitstring(jep_bitstring *bs);
  *   int - 1 on success or 0 on failure
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_add_bit(jep_bitstring *bs, unsigned int bit);
+jep_push_bit(jep_bitstring *bs, unsigned int bit);
 
 /**
- * Adds the contents of one bitstring to another.
+ * Concatenates two bitstrings by appending the contents of the source to
+ * the destination.
  *
  * Params:
  *   jep_bitstring - the destination bitstring
@@ -45,7 +46,7 @@ jep_add_bit(jep_bitstring *bs, unsigned int bit);
  *   int - the number of bits successfully added
  */
 JEP_UTILS_API int JEP_UTILS_CALL
-jep_add_bits(jep_bitstring *dest, jep_bitstring *src);
+jep_concat_bits(jep_bitstring *dest, jep_bitstring *src);
 
 /**
  * Retrieves the bit value stored at the specifide index

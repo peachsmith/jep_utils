@@ -173,4 +173,16 @@ jep_string_to_uint(jep_string *str, int radix);
 JEP_UTILS_API double JEP_UTILS_CALL
 jep_string_to_double(jep_string *str);
 
+/**
+ * Obtains a NUL-terminated C style character string.
+ *
+ * Params:
+ *   jep_string - a string
+ *
+ * Returns:
+ *   const char* - a pointer to a NUL-terminated C style string
+ */
+JEP_UTILS_API const char *JEP_UTILS_CALL
+jep_c_str(jep_string *str);
+
 #endif

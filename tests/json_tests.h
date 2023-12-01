@@ -7,4 +7,6 @@ int json_parse_test();
 
 int json_field_test();
 
+int json_nested_field_test();
+
 #endif

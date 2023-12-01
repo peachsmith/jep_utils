@@ -42,6 +42,6 @@ dist:
 	copy ..\include\jep_utils\*.h msvc\include\jep_utils
 
 test:
-	$(CC) $(INCLUDE_DIR) /I..\tests $(TEST_SRC) /link "jep_utils.lib" -out:tests.exe
+	$(CC) $(INCLUDE_DIR) /I..\tests $(TEST_SRC) /Fe"tests.exe" /link "jep_utils.lib"
 	del *.obj
 	del *.pdb

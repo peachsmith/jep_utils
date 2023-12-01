@@ -465,3 +465,89 @@ int string_to_ulong_test()
 
     return res;
 }
+
+int string_c_str_test()
+{
+    jep_string *str = jep_new_string("Hello, World!");
+
+    if (str == NULL)
+        return 0;
+
+    const char *c_str = jep_c_str(str);
+    if (c_str == NULL)
+    {
+        jep_destroy_string(str);
+        return 0;
+    }
+
+    size_t len = strlen(c_str);
+    if (len != 13)
+    {
+        jep_destroy_string(str);
+        return 0;
+    }
+
+    jep_destroy_string(str);
+
+    return 1;
+}
+
+int string_c_str_multibyte_test()
+{
+    jep_byte data[10] = {
+        0x24,                  // U+0024
+        0xC2, 0xA2,            // U+00A2
+        0xE0, 0xA4, 0xB9,      // U+0939
+        0xF0, 0x90, 0x8D, 0x88 // U+10348
+    };
+
+    jep_string *str;
+
+    str = jep_bytes_to_string(data, JEP_ENCODING_UTF_8, 10);
+
+    if (str == NULL)
+    {
+        return 0;
+    }
+
+    if (str->size != 4)
+    {
+        jep_destroy_string(str);
+        return 0;
+    }
+
+    const char *c_str = jep_c_str(str);
+    if (c_str == NULL)
+    {
+        jep_destroy_string(str);
+        return 0;
+    }
+
+    size_t len = strlen(c_str);
+    if (len != 7)
+    {
+        jep_destroy_string(str);
+        return 0;
+    }
+
+    int res = 1;
+    // 24 A2 09 39 01 03 48
+    if ((unsigned char)c_str[0] != 0x24)
+        res = 0;
+    if ((unsigned char)c_str[1] != 0xA2)
+        res = 0;
+    if ((unsigned char)c_str[2] != 0x09)
+        res = 0;
+    if ((unsigned char)c_str[3] != 0x39)
+        res = 0;
+    if ((unsigned char)c_str[4] != 0x01)
+        res = 0;
+    if ((unsigned char)c_str[5] != 0x03)
+        res = 0;
+    if ((unsigned char)c_str[6] != 0x48)
+        res = 0;
+
+    jep_destroy_string(str);
+
+    return res;
+}

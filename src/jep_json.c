@@ -1,87 +1,5 @@
 #include "jep_utils.h"
 
-/* token types */
-#define JSON_TOKEN_LBRACE 0x01
-#define JSON_TOKEN_RBRACE 0x02
-#define JSON_TOKEN_LSQUARE 0x03
-#define JSON_TOKEN_RSQUARE 0x04
-#define JSON_TOKEN_COMMA 0x05
-#define JSON_TOKEN_COLON 0x06
-#define JSON_TOKEN_QUOTE 0x07
-#define JSON_TOKEN_STRING 0x08
-#define JSON_TOKEN_NUMBER 0x09
-#define JSON_TOKEN_BOOLEAN 0x0A
-#define JSON_TOKEN_NULL 0x0B
-
-/* tokenization states */
-#define JSON_BEGIN 0x00
-#define JSON_BEGIN_OBJECT 0x01
-#define JSON_END_OBJECT 0x02
-#define JSON_BEGIN_ARRAY 0x03
-#define JSON_END_ARRAY 0x04
-#define JSON_BEGIN_STRING 0x05
-#define JSON_END_STRING 0x06
-#define JSON_BEGIN_NUMBER 0x07
-#define JSON_BEGIN_BOOLEAN 0x08
-#define JSON_BEGIN_NULL 0x09
-#define JSON_BEGIN_FIELD 0x0A
-
-/* tokenization errors */
-#define JSON_TOK_ERR_BEGIN_OBJECT 0x01
-#define JSON_TOK_ERR_END_OBJECT 0x02
-#define JSON_TOK_ERR_BEGIN_ARRAY 0x03
-#define JSON_TOK_ERR_END_ARRAY 0x04
-#define JSON_TOK_ERR_BEGIN_STRING 0x05
-#define JSON_TOK_ERR_OPEN_STRING 0x06
-#define JSON_TOK_ERR_COLON 0x07
-#define JSON_TOK_ERR_COMMA 0x08
-#define JSON_TOK_ERR_BEGIN_NUMBER 0x09
-#define JSON_TOK_ERR_END_NUMBER 0x0A
-#define JSON_TOK_ERR_DECIMAL 0x0B
-#define JSON_TOK_ERR_HEX_X 0x0C
-#define JSON_TOK_ERR_BEGIN_BOOLEAN 0x0D
-#define JSON_TOK_ERR_END_BOOLEAN 0x0E
-#define JSON_TOK_ERR_BEGIN_NULL 0x0F
-#define JSON_TOK_ERR_END_NULL 0x10
-#define JSON_TOK_ERR_ESCAPE 0x11
-#define JSON_TOK_ERR_UNEXPECTED 0x12
-
-/* parsing errors */
-#define JSON_PARSE_ERR_NULL 0x13
-
-/* value type */
-#define JSON_VALUE_ARRAY 0x01
-#define JSON_VALUE_OBJECT 0x02
-#define JSON_VALUE_NUMBER 0x03
-#define JSON_VALUE_BOOLEAN 0x04
-#define JSON_VALUE_STRING 0x05
-#define JSON_VALUE_NULL 0x06
-
-// useful character constants
-// TODO: possibly move these into character.h and make them macros
-#define JEP_CHAR_NUL 0x00
-#define JEP_CHAR_LBRC 0x7B
-#define JEP_CHAR_RBRC 0x7D
-#define JEP_CHAR_LSQR 0x5B
-#define JEP_CHAR_RSQR 0x5D
-#define JEP_CHAR_QUOTE 0x22
-#define JEP_CHAR_COLON 0x3A
-#define JEP_CHAR_COMMA 0x2C
-#define JEP_CHAR_PERIOD 0x2E
-#define JEP_CHAR_0 0x30
-#define JEP_CHAR_1 0x31
-#define JEP_CHAR_2 0x32
-#define JEP_CHAR_3 0x33
-#define JEP_CHAR_4 0x34
-#define JEP_CHAR_5 0x35
-#define JEP_CHAR_6 0x36
-#define JEP_CHAR_7 0x37
-#define JEP_CHAR_8 0x38
-#define JEP_CHAR_9 0x39
-#define JEP_CHAR_x 0x78
-#define JEP_CHAR_X 0x58
-#define JEP_CHAR_BSLASH 0x5C
-
 /*-----------------------------------------------------------------*/
 /*                        Token Functions                          */
 /*-----------------------------------------------------------------*/
@@ -277,19 +195,6 @@ static int is_null(jep_char c);
 static int is_null_start(jep_char c);
 
 /*-----------------------------------------------------------------*/
-/*                  Character Buffer Functions                     */
-/*-----------------------------------------------------------------*/
-
-/**
- * Copies the contents of one character buffer into another.
- *
- * Params:
- *   jep_char_buffer - a reference to the source buffer
- *   jep_char_buffer - a reference to the destination buffer
- */
-// static void copy_char_buffer(jep_char_buffer* src, jep_char_buffer* dest);
-
-/*-----------------------------------------------------------------*/
 /*                    Object Creation Functions                    */
 /*-----------------------------------------------------------------*/
 
@@ -297,7 +202,7 @@ static int is_null_start(jep_char c);
  * Creates a new, empty JSON object.
  *
  * Returns:
- *   json_object
+ *   jep_json_object
  */
 static jep_json_object *create_json_object();
 
@@ -305,7 +210,7 @@ static jep_json_object *create_json_object();
  * Creates a new JSON field
  *
  * Returns:
- *   json_field
+ *   jep_json_field
  */
 static jep_json_field *create_json_field();
 
@@ -313,7 +218,7 @@ static jep_json_field *create_json_field();
  * Creates a new JSON array
  *
  * Returns:
- *   json_array
+ *   jep_json_array
  */
 static jep_json_array *create_json_array();
 
@@ -321,7 +226,7 @@ static jep_json_array *create_json_array();
  * Creates a new JSON value
  *
  * Returns:
- *   json_value
+ *   jep_json_value
  */
 static jep_json_value *create_json_value();
 
@@ -329,7 +234,7 @@ static jep_json_value *create_json_value();
  * Frees the memory allocated for a JSON field.
  *
  * Params:
- *   json_field - the JSON field to destroy
+ *   jep_json_field - the JSON field to destroy
  */
 static void destroy_json_field(jep_json_field *f);
 
@@ -337,7 +242,7 @@ static void destroy_json_field(jep_json_field *f);
  * Frees the memory allocated for a JSON array.
  *
  * Params:
- *   json_field - the JSON array to destroy
+ *   jep_json_field - the JSON array to destroy
  */
 static void destroy_json_array(jep_json_array *a);
 
@@ -345,7 +250,7 @@ static void destroy_json_array(jep_json_array *a);
  * Frees the memory allocated for a JSON value.
  *
  * Params:
- *   json_field - the JSON value to destroy
+ *   jep_json_field - the JSON value to destroy
  */
 static void destroy_json_value(jep_json_value *v);
 
@@ -353,8 +258,8 @@ static void destroy_json_value(jep_json_value *v);
  * Adds a JSON value to a JSON array.
  *
  * Params:
- *   json_array - a JSON array to receive the value
- *   json_value - a JSON value to be inserted into the array
+ *   jep_json_array - a JSON array to receive the value
+ *   jep_json_value - a JSON value to be inserted into the array
  */
 static void append_value(jep_json_array *arr, jep_json_value *val);
 
@@ -362,8 +267,8 @@ static void append_value(jep_json_array *arr, jep_json_value *val);
  * Adds a JSON field to a JSON object.
  *
  * Params:
- *   json_object - a JSON object to recieve the field
- *   json_field - a JSON field to be inserted into the object
+ *   jep_json_object - a JSON object to recieve the field
+ *   jep_json_field - a JSON field to be inserted into the object
  */
 static void append_field(jep_json_object *obj, jep_json_field *field);
 
@@ -382,7 +287,7 @@ static void append_field(jep_json_object *obj, jep_json_field *field);
  *   int* - a reference to an integer that will hold the error code.
  *
  * Returns:
- *   json_token* - a list of JSON tokens
+ *   jep_json_token* - a list of JSON tokens
  */
 static jep_json_token *tokenize_json(jep_string *raw, int *err);
 
@@ -390,27 +295,18 @@ static jep_json_token *tokenize_json(jep_string *raw, int *err);
  * Parses a list of JSON tokens into a JSON object.
  *
  * Params:
- *   json_token** - a reference to a list of JSON tokens
+ *   jep_json_token** - a reference to a list of JSON tokens
  *
  * Returns:
- *   json_object - a JSON object
+ *   jep_json_object - a JSON object
  */
-static jep_json_object *parse_json(jep_json_token **tokens);
-
-/**
- * Prints a list of JSON tokens to a file.
- *
- * Params:
- *   json_token* - a list of JSON tokens
- *   FILE* - a file pointer
- */
-// static void jep_print_json_tokens(jep_json_token* list, FILE* f);
+static jep_json_object *parse_json(jep_json_token **tokens, int parse_type, jep_json_array **out_arr);
 
 /**
  * Frees the memory allocated for a list of JSON tokens.
  *
  * Params:
- *   json_token* - a reference to a list of JSON tokens
+ *   jep_json_token* - a reference to a list of JSON tokens
  */
 static void destroy_json_token_list(jep_json_token *list);
 
@@ -678,43 +574,6 @@ static int is_null_start(jep_char c)
 }
 
 /*-----------------------------------------------------------------*/
-/*             Character Buffer Function Implementations           */
-/*-----------------------------------------------------------------*/
-
-// static void print_char_buffer(jep_char_buffer* cb, FILE* f)
-//{
-//    if (cb == NULL)
-//        return;
-//
-//    size_t i;
-//    for (i = 0; i < cb->size; i++)
-//    {
-//        if (cb->buffer[i] == '\0')
-//        {
-//            putc('\\', f);
-//            putc('0', f);
-//        }
-//        else
-//            putc(cb->buffer[i], f);
-//    }
-// }
-
-// static void copy_char_buffer(jep_char_buffer* src, jep_char_buffer* dest)
-// {
-//     if (src == NULL || dest == NULL)
-//         return;
-
-//     if (src->buffer == NULL || dest->buffer == NULL)
-//         return;
-
-//     jep_clear_char_buffer(dest);
-
-//     size_t i;
-//     for (i = 0; i < src->size; i++)
-//         jep_append_char(dest, src->buffer[i]);
-// }
-
-/*-----------------------------------------------------------------*/
 /*             Object Creation Function Implementations            */
 /*-----------------------------------------------------------------*/
 
@@ -818,7 +677,10 @@ static void destroy_json_value(jep_json_value *v)
     if (v->type == JSON_VALUE_OBJECT)
         jep_destroy_json_object(v->data.obj);
 
-    else if (v->type == JSON_VALUE_NUMBER || v->type == JSON_VALUE_BOOLEAN || v->type == JSON_VALUE_NULL || v->type == JSON_VALUE_STRING)
+    else if (v->type == JSON_VALUE_NUMBER ||
+             v->type == JSON_VALUE_BOOLEAN ||
+             v->type == JSON_VALUE_NULL ||
+             v->type == JSON_VALUE_STRING)
         jep_destroy_string(v->data.raw);
 
     else if (v->type == JSON_VALUE_ARRAY)
@@ -881,11 +743,16 @@ static void append_field(jep_json_object *obj, jep_json_field *field)
 
 static int is_begin_object_err(jep_json_state *state, jep_json_token *list)
 {
-    if (state->top->state != JSON_BEGIN && state->top->state != JSON_BEGIN_ARRAY && list->tail->type != JSON_TOKEN_COLON)
+    if (state->top->state != JSON_BEGIN &&
+        state->top->state != JSON_BEGIN_ARRAY &&
+        list->tail->type != JSON_TOKEN_COLON)
     {
         return JSON_TOK_ERR_BEGIN_OBJECT;
     }
-    else if (state->top->state == JSON_BEGIN_ARRAY && list->tail->type != JSON_TOKEN_LSQUARE && list->tail->type != JSON_TOKEN_COLON && list->tail->type != JSON_TOKEN_COMMA)
+    else if (state->top->state == JSON_BEGIN_ARRAY &&
+             list->tail->type != JSON_TOKEN_LSQUARE &&
+             list->tail->type != JSON_TOKEN_COLON &&
+             list->tail->type != JSON_TOKEN_COMMA)
     {
         return JSON_TOK_ERR_BEGIN_OBJECT;
     }
@@ -899,7 +766,9 @@ static int is_end_object_err(jep_json_state *state, jep_json_token *list)
     {
         return JSON_TOK_ERR_END_OBJECT;
     }
-    else if (state->top->state != JSON_BEGIN_OBJECT || list->tail->type == JSON_TOKEN_COLON || list->tail->type == JSON_TOKEN_COMMA)
+    else if (state->top->state != JSON_BEGIN_OBJECT ||
+             list->tail->type == JSON_TOKEN_COLON ||
+             list->tail->type == JSON_TOKEN_COMMA)
     {
         return JSON_TOK_ERR_END_OBJECT;
     }
@@ -913,7 +782,9 @@ static int is_begin_array_error(jep_json_state *state, jep_json_token *list)
     {
         return JSON_TOK_ERR_BEGIN_ARRAY;
     }
-    else if (state->top->state != JSON_BEGIN && list->tail->type != JSON_TOKEN_COMMA && list->tail->type != JSON_TOKEN_COLON)
+    else if (state->top->state != JSON_BEGIN &&
+             list->tail->type != JSON_TOKEN_COMMA &&
+             list->tail->type != JSON_TOKEN_COLON)
     {
         return JSON_TOK_ERR_BEGIN_ARRAY;
     }
@@ -927,7 +798,9 @@ static int is_end_array_error(jep_json_state *state, jep_json_token *list)
     {
         return JSON_TOK_ERR_END_ARRAY;
     }
-    else if (state->top->state != JSON_BEGIN_ARRAY || list->tail->type == JSON_TOKEN_COLON || list->tail->type == JSON_TOKEN_COMMA)
+    else if (state->top->state != JSON_BEGIN_ARRAY ||
+             list->tail->type == JSON_TOKEN_COLON ||
+             list->tail->type == JSON_TOKEN_COMMA)
     {
         return JSON_TOK_ERR_END_ARRAY;
     }
@@ -943,7 +816,10 @@ static int is_begin_string_error(jep_json_state *state, jep_json_token *list)
     }
     else if (state->top->state == JSON_BEGIN_OBJECT)
     {
-        if (list->tail->type != JSON_TOKEN_LBRACE && list->tail->type != JSON_TOKEN_LSQUARE && list->tail->type != JSON_TOKEN_COLON && list->tail->type != JSON_TOKEN_COMMA)
+        if (list->tail->type != JSON_TOKEN_LBRACE &&
+            list->tail->type != JSON_TOKEN_LSQUARE &&
+            list->tail->type != JSON_TOKEN_COLON &&
+            list->tail->type != JSON_TOKEN_COMMA)
         {
             return JSON_TOK_ERR_BEGIN_STRING;
         }
@@ -979,7 +855,12 @@ static int is_comma_error(jep_json_state *state, jep_json_token *list)
     {
         return JSON_TOK_ERR_COMMA;
     }
-    else if (list->tail->type != JSON_TOKEN_RBRACE && list->tail->type != JSON_TOKEN_RSQUARE && list->tail->type != JSON_TOKEN_STRING && list->tail->type != JSON_TOKEN_NUMBER && list->tail->type != JSON_TOKEN_BOOLEAN && list->tail->type != JSON_TOKEN_NULL)
+    else if (list->tail->type != JSON_TOKEN_RBRACE &&
+             list->tail->type != JSON_TOKEN_RSQUARE &&
+             list->tail->type != JSON_TOKEN_STRING &&
+             list->tail->type != JSON_TOKEN_NUMBER &&
+             list->tail->type != JSON_TOKEN_BOOLEAN &&
+             list->tail->type != JSON_TOKEN_NULL)
     {
         return JSON_TOK_ERR_COMMA;
     }
@@ -1002,7 +883,7 @@ static int is_number_error(jep_json_state *state, jep_json_token *list)
     }
     else if (state->top->state == JSON_BEGIN_ARRAY)
     {
-        if (list->tail->type != JSON_TOKEN_COMMA && list->tail->type != JSON_TOKEN_LSQUARE)
+        if (list->tail->type != JSON_TOKEN_LSQUARE && list->tail->type != JSON_TOKEN_COMMA)
         {
             return JSON_TOK_ERR_BEGIN_NUMBER;
         }
@@ -1026,7 +907,7 @@ static int is_boolean_error(jep_json_state *state, jep_json_token *list)
     }
     else if (state->top->state == JSON_BEGIN_ARRAY)
     {
-        if (list->tail->type != JSON_TOKEN_COMMA)
+        if (list->tail->type != JSON_TOKEN_LSQUARE && list->tail->type != JSON_TOKEN_COMMA)
         {
             return JSON_TOK_ERR_BEGIN_BOOLEAN;
         }
@@ -1050,7 +931,7 @@ static int is_null_error(jep_json_state *state, jep_json_token *list)
     }
     else if (state->top->state == JSON_BEGIN_ARRAY)
     {
-        if (list->tail->type != JSON_TOKEN_COMMA)
+        if (list->tail->type != JSON_TOKEN_LSQUARE && list->tail->type != JSON_TOKEN_COMMA)
         {
             return JSON_TOK_ERR_BEGIN_NULL;
         }
@@ -1434,7 +1315,6 @@ static jep_json_token *tokenize_json(jep_string *raw, int *err)
             {
                 error = JSON_TOK_ERR_UNEXPECTED;
             }
-            // break;
         }
     }
 
@@ -1450,16 +1330,32 @@ static jep_json_token *tokenize_json(jep_string *raw, int *err)
     return list;
 }
 
-static jep_json_object *parse_json(jep_json_token **tokens)
-{
-    jep_json_object *root = create_json_object();
-    jep_json_object *cur_obj = root;
-    // jep_json_array* cur_array = NULL;
-    jep_json_field *cur_field = NULL;
-    // jep_json_value* cur_value = NULL;
+#define JSON_PARSE_OBJECT 1
+#define JSON_PARSE_ARRAY 2
 
-    if (root == NULL)
-        return NULL;
+static jep_json_object *parse_json(jep_json_token **tokens, int parse_type, jep_json_array **out_arr)
+{
+    jep_json_object *root = NULL;
+    jep_json_object *cur_obj = NULL;
+    jep_json_field *cur_field = NULL;
+    jep_json_field arr_field;
+    jep_json_value arr_value;
+
+    if (parse_type == JSON_PARSE_ARRAY)
+    {
+        cur_field = &arr_field;
+        arr_value.data.arr = create_json_array();
+        cur_field->value = &arr_value;
+    }
+    else
+    {
+        root = create_json_object();
+
+        if (root == NULL)
+            return NULL;
+
+        cur_obj = root;
+    }
 
     jep_json_token *t = *tokens;
     jep_json_token *end = NULL;
@@ -1478,7 +1374,7 @@ static jep_json_object *parse_json(jep_json_token **tokens)
             }
             else if (state->top->state == JSON_BEGIN_FIELD && cur_field != NULL)
             {
-                jep_json_object *o = parse_json(&t);
+                jep_json_object *o = parse_json(&t, JSON_PARSE_OBJECT, NULL);
 
                 cur_field->value->type = JSON_VALUE_OBJECT;
                 cur_field->value->data.obj = o;
@@ -1490,7 +1386,7 @@ static jep_json_object *parse_json(jep_json_token **tokens)
             }
             else if (state->top->state == JSON_BEGIN_ARRAY && cur_field != NULL)
             {
-                jep_json_object *o = parse_json(&t);
+                jep_json_object *o = parse_json(&t, JSON_PARSE_OBJECT, NULL);
 
                 jep_json_value *v = create_json_value();
                 v->type = JSON_VALUE_OBJECT;
@@ -1513,33 +1409,45 @@ static jep_json_object *parse_json(jep_json_token **tokens)
         /* arrays */
         else if (t->type == JSON_TOKEN_LSQUARE)
         {
-            if (state->top->state == JSON_BEGIN_FIELD && cur_field != NULL)
+            if (state->top->state == JSON_BEGIN)
             {
                 jep_json_state *s = create_json_state(JSON_BEGIN_ARRAY);
                 push_state(state, s);
-
-                jep_json_array *a = create_json_array();
+            }
+            else if (state->top->state == JSON_BEGIN_FIELD && cur_field != NULL)
+            {
+                jep_json_array *a;
+                parse_json(&t, JSON_PARSE_ARRAY, &a);
 
                 cur_field->value->type = JSON_VALUE_ARRAY;
                 cur_field->value->data.arr = a;
+
+                append_field(cur_obj, cur_field);
+
+                jep_json_state *s = pop_state(state);
+                destroy_json_state(s);
+            }
+            else if (state->top->state == JSON_BEGIN_ARRAY && cur_field != NULL)
+            {
+                jep_json_array *a;
+                parse_json(&t, JSON_PARSE_ARRAY, &a);
+
+                jep_json_value *v = create_json_value();
+                v->type = JSON_VALUE_ARRAY;
+                v->data.arr = a;
+
+                append_value(cur_field->value->data.arr, v);
             }
         }
         else if (t->type == JSON_TOKEN_RSQUARE)
         {
             if (state->top->state == JSON_BEGIN_ARRAY)
             {
-                if (cur_field != NULL)
-                    append_field(cur_obj, cur_field);
-
                 jep_json_state *s = pop_state(state);
                 destroy_json_state(s);
             }
 
-            if (state->top->state == JSON_BEGIN_FIELD)
-            {
-                jep_json_state *s = pop_state(state);
-                destroy_json_state(s);
-            }
+            end = t;
         }
 
         /* values */
@@ -1656,63 +1564,13 @@ static jep_json_object *parse_json(jep_json_token **tokens)
 
     *tokens = end;
 
+    if (parse_type == JSON_PARSE_ARRAY && out_arr != NULL)
+    {
+        *out_arr = cur_field->value->data.arr;
+    }
+
     return root;
 }
-
-// static void jep_print_json_tokens(jep_json_token* list, FILE* f)
-// {
-//     jep_json_token* tok = list;
-
-//     while (tok != NULL)
-//     {
-//         switch (tok->type)
-//         {
-//         case JSON_BEGIN:
-//             fprintf(f, "%-10s", "[BEGIN]");
-//             break;
-//         case JSON_TOKEN_LBRACE:
-//             fprintf(f, "%-10s", "[LBRACE]");
-//             break;
-//         case JSON_TOKEN_RBRACE:
-//             fprintf(f, "%-10s", "[RBRACE]");
-//             break;
-//         case JSON_TOKEN_LSQUARE:
-//             fprintf(f, "%-10s", "[LSQUARE]");
-//             break;
-//         case JSON_TOKEN_RSQUARE:
-//             fprintf(f, "%-10s", "[RSQUARE]");
-//             break;
-//         case JSON_TOKEN_COMMA:
-//             fprintf(f, "%-10s", "[COMMA]");
-//             break;
-//         case JSON_TOKEN_COLON:
-//             fprintf(f, "%-10s", "[COLON]");
-//             break;
-//         case JSON_TOKEN_QUOTE:
-//             fprintf(f, "%-10s", "[QUOTE]");
-//             break;
-//         case JSON_TOKEN_STRING:
-//             fprintf(f, "%-10s", "[STRING]");
-//             break;
-//         case JSON_TOKEN_NUMBER:
-//             fprintf(f, "%-10s", "[NUMBER]");
-//             break;
-//         case JSON_TOKEN_BOOLEAN:
-//             fprintf(f, "%-10s", "[BOOLEAN]");
-//             break;
-//         case JSON_TOKEN_NULL:
-//             fprintf(f, "%-10s", "[NULL]");
-//             break;
-//         default:
-//             fprintf(f, "%-10s", "[UNKNOWN]");
-//             break;
-//         }
-
-//         fprintf(f, "\n");
-
-//         tok = tok->next;
-//     }
-// }
 
 static void destroy_json_token_list(jep_json_token *list)
 {
@@ -1747,7 +1605,7 @@ jep_parse_json_string(jep_string *raw, jep_json_object **obj)
     if (tokens == NULL)
         return err;
 
-    jep_json_object *o = parse_json(&tokens);
+    jep_json_object *o = parse_json(&tokens, JSON_PARSE_OBJECT, NULL);
 
     destroy_json_token_list(tokens);
 

@@ -412,7 +412,7 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
             if (dict->symbols[j].b == raw->buffer[i])
             {
                 // Add bits and check for failure
-                if (!jep_add_bits(data, dict->symbols[j].code))
+                if (!jep_concat_bits(data, dict->symbols[j].code))
                 {
                     jep_destroy_huff_code(huff);
                     jep_destroy_bitstring(data);
@@ -1000,7 +1000,7 @@ static int assign_bitcodes(jep_huff_tree *tree)
 
     if (node->sym.w == 0)
     {
-        if (!jep_add_bit(bs, 0))
+        if (!jep_push_bit(bs, 0))
         {
             jep_destroy_bitstring(bs);
             return 0;
@@ -1030,7 +1030,7 @@ static int assign_bitcode(
     if (node->sym.w < 1)
     {
         node->sym.n = level;
-        if (!jep_add_bits(node->sym.code, bs))
+        if (!jep_concat_bits(node->sym.code, bs))
             return 0;
     }
 
@@ -1040,7 +1040,7 @@ static int assign_bitcode(
     // the next level, then remove the bit.
     if (node->leaf_1 != NULL)
     {
-        jep_add_bit(bs, 1);
+        jep_push_bit(bs, 1);
 
         if (!assign_bitcode(node->leaf_1, level + 1, bs))
             return 0;
@@ -1055,7 +1055,7 @@ static int assign_bitcode(
     // the next level, then remove the bit.
     if (node->leaf_2 != NULL)
     {
-        jep_add_bit(bs, 0);
+        jep_push_bit(bs, 0);
 
         if (!assign_bitcode(node->leaf_2, level + 1, bs))
             return 0;

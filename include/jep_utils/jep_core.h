@@ -225,7 +225,89 @@ typedef struct jep_string
 {
     jep_char *chars;
     size_t size;
+    char* c_buf;
 } jep_string;
+
+/* JSON token types */
+#define JSON_TOKEN_LBRACE  0x01
+#define JSON_TOKEN_RBRACE  0x02
+#define JSON_TOKEN_LSQUARE 0x03
+#define JSON_TOKEN_RSQUARE 0x04
+#define JSON_TOKEN_COMMA   0x05
+#define JSON_TOKEN_COLON   0x06
+#define JSON_TOKEN_QUOTE   0x07
+#define JSON_TOKEN_STRING  0x08
+#define JSON_TOKEN_NUMBER  0x09
+#define JSON_TOKEN_BOOLEAN 0x0A
+#define JSON_TOKEN_NULL    0x0B
+
+/* JSON tokenization states */
+#define JSON_BEGIN         0x00
+#define JSON_BEGIN_OBJECT  0x01
+#define JSON_END_OBJECT    0x02
+#define JSON_BEGIN_ARRAY   0x03
+#define JSON_END_ARRAY     0x04
+#define JSON_BEGIN_STRING  0x05
+#define JSON_END_STRING    0x06
+#define JSON_BEGIN_NUMBER  0x07
+#define JSON_BEGIN_BOOLEAN 0x08
+#define JSON_BEGIN_NULL    0x09
+#define JSON_BEGIN_FIELD   0x0A
+
+/* JSON tokenization errors */
+#define JSON_TOK_ERR_BEGIN_OBJECT  0x01
+#define JSON_TOK_ERR_END_OBJECT    0x02
+#define JSON_TOK_ERR_BEGIN_ARRAY   0x03
+#define JSON_TOK_ERR_END_ARRAY     0x04
+#define JSON_TOK_ERR_BEGIN_STRING  0x05
+#define JSON_TOK_ERR_OPEN_STRING   0x06
+#define JSON_TOK_ERR_COLON         0x07
+#define JSON_TOK_ERR_COMMA         0x08
+#define JSON_TOK_ERR_BEGIN_NUMBER  0x09
+#define JSON_TOK_ERR_END_NUMBER    0x0A
+#define JSON_TOK_ERR_DECIMAL       0x0B
+#define JSON_TOK_ERR_HEX_X         0x0C
+#define JSON_TOK_ERR_BEGIN_BOOLEAN 0x0D
+#define JSON_TOK_ERR_END_BOOLEAN   0x0E
+#define JSON_TOK_ERR_BEGIN_NULL    0x0F
+#define JSON_TOK_ERR_END_NULL      0x10
+#define JSON_TOK_ERR_ESCAPE        0x11
+#define JSON_TOK_ERR_UNEXPECTED    0x12
+
+/* JSON parsing errors */
+#define JSON_PARSE_ERR_NULL 0x13
+
+/* JSON value types */
+#define JSON_VALUE_ARRAY   0x01
+#define JSON_VALUE_OBJECT  0x02
+#define JSON_VALUE_NUMBER  0x03
+#define JSON_VALUE_BOOLEAN 0x04
+#define JSON_VALUE_STRING  0x05
+#define JSON_VALUE_NULL    0x06
+
+// useful character constants
+#define JEP_CHAR_NUL    0x00
+#define JEP_CHAR_LBRC   0x7B
+#define JEP_CHAR_RBRC   0x7D
+#define JEP_CHAR_LSQR   0x5B
+#define JEP_CHAR_RSQR   0x5D
+#define JEP_CHAR_QUOTE  0x22
+#define JEP_CHAR_COLON  0x3A
+#define JEP_CHAR_COMMA  0x2C
+#define JEP_CHAR_PERIOD 0x2E
+#define JEP_CHAR_0      0x30
+#define JEP_CHAR_1      0x31
+#define JEP_CHAR_2      0x32
+#define JEP_CHAR_3      0x33
+#define JEP_CHAR_4      0x34
+#define JEP_CHAR_5      0x35
+#define JEP_CHAR_6      0x36
+#define JEP_CHAR_7      0x37
+#define JEP_CHAR_8      0x38
+#define JEP_CHAR_9      0x39
+#define JEP_CHAR_x      0x78
+#define JEP_CHAR_X      0x58
+#define JEP_CHAR_BSLASH 0x5C
 
 /**
  * A JSON token classifies a string of raw text within the context of JSON

@@ -38,7 +38,7 @@ void jep_destroy_bitstring(jep_bitstring *bs)
     free(bs);
 }
 
-int jep_add_bit(jep_bitstring *bs, unsigned int bit)
+int jep_push_bit(jep_bitstring *bs, unsigned int bit)
 {
     if (bit != 0 && bit != 1)
         return 0;
@@ -63,7 +63,7 @@ int jep_add_bit(jep_bitstring *bs, unsigned int bit)
     return 1;
 }
 
-int jep_add_bits(jep_bitstring *dest, jep_bitstring *src)
+int jep_concat_bits(jep_bitstring *dest, jep_bitstring *src)
 {
     unsigned long i;
     unsigned long bit;
@@ -88,7 +88,7 @@ int jep_add_bits(jep_bitstring *dest, jep_bitstring *src)
         if (src->bytes[byte] & (1 << bit++))
             next_bit = 1;
 
-        next_result = jep_add_bit(dest, next_bit);
+        next_result = jep_push_bit(dest, next_bit);
 
         if (next_result)
             final_result += next_result;
