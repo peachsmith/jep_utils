@@ -147,13 +147,13 @@ int huff_read_test()
     if (huff->dict->count != 3)
         res = 0;
 
-    if (huff->dict->symbols[0].b != 0x41)
+    if (huff->dict->symbols[0].byte != 0x41)
         res = 0;
 
-    if (huff->dict->symbols[1].b != 0x42)
+    if (huff->dict->symbols[1].byte != 0x42)
         res = 0;
 
-    if (huff->dict->symbols[2].b != 0x43)
+    if (huff->dict->symbols[2].byte != 0x43)
         res = 0;
 
     jep_destroy_huff_code(huff);

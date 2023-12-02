@@ -159,7 +159,9 @@ jep_code_point *jep_utf8_decode(const jep_byte *bytes, size_t n, size_t *res)
             d = end - i;
 
             if (d >= 0 && d <= 4)
+            {
                 seq[d] = b;
+            }
 
         } while (i < end && i < n && d > 0);
 
@@ -177,7 +179,9 @@ jep_code_point *jep_utf8_decode(const jep_byte *bytes, size_t n, size_t *res)
                 npts = (jep_code_point *)realloc(pts, sizeof(jep_code_point) * cap);
 
                 if (npts != NULL)
+                {
                     pts = npts;
+                }
                 else
                 {
                     free(pts);
@@ -218,7 +222,9 @@ jep_byte *jep_utf8_encode(const jep_code_point *str, size_t n, size_t *res)
     bytes = (jep_byte *)malloc(sizeof(jep_byte) * cap);
 
     if (bytes == NULL)
+    {
         return NULL;
+    }
 
     // Loop through the code points and place their encoded byte
     // sequences in the output array.
@@ -237,7 +243,9 @@ jep_byte *jep_utf8_encode(const jep_code_point *str, size_t n, size_t *res)
                 tmp = (jep_byte *)realloc(bytes, new_cap);
 
                 if (tmp == NULL)
+                {
                     return NULL;
+                }
 
                 bytes = tmp;
             }
@@ -252,7 +260,9 @@ jep_byte *jep_utf8_encode(const jep_code_point *str, size_t n, size_t *res)
         tmp = (jep_byte *)realloc(bytes, count);
 
         if (tmp == NULL)
+        {
             return NULL;
+        }
 
         bytes = tmp;
     }
@@ -321,9 +331,13 @@ jep_code_point *utf16_decode(
     for (i = (!order && bom) ? 2 : 0, c = 0; i < n; i++)
     {
         if ((order == JEP_LITTLE_ENDIAN || swap) && i < n - 1)
+        {
             len = jep_utf16_len(bytes[i + 1]);
+        }
         else
+        {
             len = jep_utf16_len(bytes[i]);
+        }
 
         end = i + len;
 
@@ -336,7 +350,9 @@ jep_code_point *utf16_decode(
             d = end - i;
 
             if (d >= 0 && d <= 4)
+            {
                 seq[d] = b;
+            }
 
         } while (i < end && i < n && d > 0);
 
@@ -368,7 +384,9 @@ jep_code_point *utf16_decode(
                 npts = (jep_code_point *)realloc(pts, cap);
 
                 if (npts != NULL)
+                {
                     pts = npts;
+                }
                 else
                 {
                     free(pts);
@@ -415,7 +433,9 @@ jep_byte *jep_utf16_encode(
     bytes = (jep_byte *)malloc(sizeof(jep_byte) * cap);
 
     if (bytes == NULL)
+    {
         return NULL;
+    }
 
     if (bom)
     {
@@ -453,7 +473,9 @@ jep_byte *jep_utf16_encode(
                 tmp = (jep_byte *)realloc(bytes, new_cap);
 
                 if (tmp == NULL)
+                {
                     return NULL;
+                }
 
                 bytes = tmp;
             }
@@ -468,7 +490,9 @@ jep_byte *jep_utf16_encode(
         tmp = (jep_byte *)realloc(bytes, count);
 
         if (tmp == NULL)
+        {
             return NULL;
+        }
 
         bytes = tmp;
     }
@@ -523,7 +547,9 @@ static jep_code_point utf8_decode_point(uint8_t *seq, size_t n)
 
     // For single byte sequences, the code point is the first element.
     if (n == 1)
+    {
         return (jep_code_point)(seq[0]);
+    }
 
     if (n == 2)
     {
@@ -656,7 +682,9 @@ static jep_code_point utf16_decode_point(uint8_t *seq, size_t n)
     uint32_t lo; // low surrogate
 
     if (n == 2)
+    {
         return (seq[1] << 8) | seq[0];
+    }
 
     // The second element is the high half of thelow surrogate,
     // and the first element is the lower half.

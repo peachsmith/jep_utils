@@ -412,11 +412,11 @@ typedef struct jep_json_object
  */
 typedef struct jep_huff_sym
 {
-    jep_byte b;          /* byte       */
-    uint32_t f;          /* frequency  */
-    uint32_t w;          /* weight     */
-    uint32_t n;          /* tree depth */
-    jep_bitstring *code; /* bit code   */
+    jep_byte byte;
+    uint32_t freq;
+    uint32_t weight;
+    uint32_t depth;
+    jep_bitstring *code;
 } jep_huff_sym;
 
 /**

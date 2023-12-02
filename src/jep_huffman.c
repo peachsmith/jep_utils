@@ -284,13 +284,14 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
     uint32_t j;
 
     if (raw == NULL)
+    {
         return NULL;
+    }
 
     huff = create_huff_code();
     data = jep_create_bitstring();
     tree = create_tree();
 
-    // Check for failure to create any of the components
     if (huff == NULL || data == NULL || tree == NULL)
     {
         jep_destroy_huff_code(huff);
@@ -299,28 +300,25 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
         return NULL;
     }
 
-    // Prepare the dictionary.
     for (i = 0; i < UCHAR_MAX + 1; i++)
     {
-        bytes[i].b = (jep_byte)i;
-        bytes[i].f = 0;
-        bytes[i].w = 0;
-        bytes[i].n = 1;
+        bytes[i].byte = (jep_byte)i;
+        bytes[i].freq = 0;
+        bytes[i].weight = 0;
+        bytes[i].depth = 1;
         bytes[i].code = NULL;
     }
 
-    // Determine the unique bytes.
     // Any bitstrings created here will be destroyed
     // when the dictionary is destroyed.
     unique = 0;
     for (i = 0; i < raw->size; i++)
     {
-        if (bytes[raw->buffer[i]].f == 0)
+        if (bytes[raw->buffer[i]].freq == 0)
         {
             unique++;
             bytes[raw->buffer[i]].code = jep_create_bitstring();
 
-            // Check for failure to create bitstring
             if (bytes[raw->buffer[i]].code == NULL)
             {
                 jep_destroy_huff_code(huff);
@@ -329,19 +327,16 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
                 return NULL;
             }
         }
-        bytes[raw->buffer[i]].f++;
+        bytes[raw->buffer[i]].freq++;
     }
 
-    // Create Huffman leaf nodes.
     // Any nodes created here will be destroyed
     // when the tree is destroyed.
     for (i = 0; i < UCHAR_MAX + 1; i++)
     {
-        if (bytes[i].f > 0)
+        if (bytes[i].freq > 0)
         {
             jep_huff_node *node = create_leaf_node();
-
-            // Check for failure to create leaf node
             if (node == NULL)
             {
                 jep_destroy_huff_code(huff);
@@ -358,10 +353,8 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
         }
     }
 
-    // Sort the list of leaf nodes.
     sort_leaf_nodes(tree);
 
-    // Construct the tree and check for failure.
     if (!construct_tree(tree))
     {
         jep_destroy_huff_code(huff);
@@ -370,7 +363,6 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
         return NULL;
     }
 
-    // Assign bitcodes and check for failure.
     if (!assign_bitcodes(tree))
     {
         jep_destroy_huff_code(huff);
@@ -379,10 +371,7 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
         return NULL;
     }
 
-    // Create the bitcode dictionary.
     dict = create_dict(unique);
-
-    // Check for failure to create the dictionary.
     if (dict == NULL)
     {
         jep_destroy_huff_code(huff);
@@ -391,27 +380,24 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
         return NULL;
     }
 
-    // Populate the bitcode dictionary.
     for (i = 0, j = 0; i < UCHAR_MAX + 1; i++)
     {
-        if (bytes[i].f > 0)
+        if (bytes[i].freq > 0)
         {
-            dict->symbols[j].b = bytes[i].b;
-            dict->symbols[j].f = bytes[i].f;
-            dict->symbols[j].n = bytes[i].n;
+            dict->symbols[j].byte = bytes[i].byte;
+            dict->symbols[j].freq = bytes[i].freq;
+            dict->symbols[j].depth = bytes[i].depth;
             dict->symbols[j++].code = bytes[i].code;
         }
     }
     dict->count = j;
 
-    // Encode the data
     for (i = 0; i < raw->size; i++)
     {
         for (j = 0; j < unique; j++)
         {
-            if (dict->symbols[j].b == raw->buffer[i])
+            if (dict->symbols[j].byte == raw->buffer[i])
             {
-                // Add bits and check for failure
                 if (!jep_concat_bits(data, dict->symbols[j].code))
                 {
                     jep_destroy_huff_code(huff);
@@ -435,7 +421,6 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
         return NULL;
     }
 
-    // Write the Huffman Coding data to the output buffer.
     jep_huff_write(huff, encoded);
 
     return encoded;
@@ -443,21 +428,25 @@ jep_byte_buffer *jep_huff_encode(jep_byte_buffer *raw)
 
 jep_byte_buffer *jep_huff_decode(jep_byte_buffer *encoded)
 {
-    jep_byte_buffer *raw; // The decoded data
-    jep_huff_code *hc;    // Huffman Coding data
-    jep_huff_node *root;  // The root node of the Huffman tree
-    jep_huff_node *leaf;  // The current leaf node
-    uint32_t byte;        // Current byte of a bitstring
-    uint32_t bit;         // Current bit of a byte in a bitstring
-    uint32_t i;           // Index
+    jep_byte_buffer *raw;
+    jep_huff_code *hc;
+    jep_huff_node *root;
+    jep_huff_node *leaf;
+    uint32_t byte;
+    uint32_t bit;
+    uint32_t i;
 
     if (encoded == NULL)
+    {
         return NULL;
+    }
 
     hc = jep_huff_read(encoded);
 
     if (hc == NULL)
+    {
         return NULL;
+    }
 
     raw = jep_create_byte_buffer();
 
@@ -471,29 +460,17 @@ jep_byte_buffer *jep_huff_decode(jep_byte_buffer *encoded)
     leaf = root;
     bit = byte = 0;
 
-    // Traverse the Huffman tree.
-    // Starting from the root node,
-    // if the current bit in the bitstring is 1, we move on
-    // to leaf 1 of the current node, otherwise we move to leaf 2.
-    // Upon reaching the last node of a branch, we add the byte value
-    // stored in that node to the output buffer.
     for (i = 0; i <= hc->data->bit_count; i++)
     {
-        // Update the bitstring position variables
-        // checking the current bit advances the bit counter.
-        // Once that has reached CHAR_BIT, we reset it and
-        // advance the byte counter.
         if (bit == CHAR_BIT)
         {
             byte++;
             bit = 0;
         }
 
-        if (leaf->sym.w == 0)
+        if (leaf->sym.weight == 0)
         {
-            // Attempt to add the byte to the output
-            // buffer and check for failure.
-            if (!jep_append_byte(raw, leaf->sym.b))
+            if (!jep_append_byte(raw, leaf->sym.byte))
             {
                 jep_destroy_byte_buffer(raw);
                 return NULL;
@@ -504,8 +481,6 @@ jep_byte_buffer *jep_huff_decode(jep_byte_buffer *encoded)
         }
         else
         {
-            // Determine which leaf node to visit next
-            // and advance the bit counter
             if (hc->data->bytes[byte] & (1 << bit++))
             {
                 leaf = leaf->leaf_1;
@@ -529,13 +504,13 @@ jep_huff_code *jep_huff_read(jep_byte_buffer *raw)
 
     size_t pos = 0;
 
-    // Read the dictionary.
     dict = read_huff_dict(raw, &pos);
 
     if (dict == NULL)
+    {
         return NULL;
+    }
 
-    // Read the data
     bs = read_huff_data(raw, &pos);
 
     if (bs == NULL)
@@ -544,7 +519,6 @@ jep_huff_code *jep_huff_read(jep_byte_buffer *raw)
         return NULL;
     }
 
-    // Reconstruct a Huffman tree
     tree = reconstruct_tree(dict);
 
     if (tree == NULL)
@@ -554,7 +528,6 @@ jep_huff_code *jep_huff_read(jep_byte_buffer *raw)
         return NULL;
     }
 
-    // Create and populate the Huffman Coding context
     hc = create_huff_code();
 
     if (hc == NULL)
@@ -575,10 +548,14 @@ jep_huff_code *jep_huff_read(jep_byte_buffer *raw)
 int jep_huff_write(jep_huff_code *hc, jep_byte_buffer *buffer)
 {
     if (hc == NULL || buffer == NULL)
+    {
         return 0;
+    }
 
     if (hc->dict == NULL || hc->data == NULL)
+    {
         return 0;
+    }
 
     write_huff_dict(hc->dict, buffer);
     write_huff_data(hc->data, buffer);
@@ -589,7 +566,9 @@ int jep_huff_write(jep_huff_code *hc, jep_byte_buffer *buffer)
 void jep_destroy_huff_code(jep_huff_code *hc)
 {
     if (hc == NULL)
+    {
         return;
+    }
 
     destroy_dict(hc->dict);
     destroy_tree(hc->tree);
@@ -609,17 +588,19 @@ static jep_huff_node *create_leaf_node()
     node = jep_alloc(jep_huff_node, 1);
 
     if (node == NULL)
+    {
         return NULL;
+    }
 
     node->leaf_1 = NULL;
     node->leaf_2 = NULL;
     node->next = NULL;
     node->prev = NULL;
     node->sym.code = NULL;
-    node->sym.b = 0;
-    node->sym.f = 0;
-    node->sym.w = 0;
-    node->sym.n = 0;
+    node->sym.byte = 0;
+    node->sym.freq = 0;
+    node->sym.weight = 0;
+    node->sym.depth = 0;
 
     return node;
 }
@@ -627,15 +608,22 @@ static jep_huff_node *create_leaf_node()
 static void destroy_leaf_node(jep_huff_node *node)
 {
     if (node == NULL)
+    {
         return;
+    }
 
     if (node->leaf_1 != NULL)
+    {
         destroy_leaf_node(node->leaf_1);
+    }
 
     if (node->leaf_2 != NULL)
+    {
         destroy_leaf_node(node->leaf_2);
+    }
 
-    // Disposal of bitstrings is handled in destroy_dict.
+    // We don't need to destroy the bitstrings here.
+    // That's handled in destroy_dict.
 
     free(node);
 }
@@ -649,7 +637,9 @@ static jep_huff_dict *create_dict(size_t count)
     dict = jep_alloc(jep_huff_dict, 1);
 
     if (dict == NULL)
+    {
         return NULL;
+    }
 
     dict->count = (uint32_t)count;
 
@@ -674,15 +664,21 @@ static jep_huff_dict *create_dict(size_t count)
 static void destroy_dict(jep_huff_dict *dict)
 {
     if (dict == NULL)
+    {
         return;
+    }
 
     uint32_t i;
 
     for (i = 0; i < dict->count; i++)
+    {
         jep_destroy_bitstring(dict->symbols[i].code);
+    }
 
     if (dict->symbols != NULL)
+    {
         free(dict->symbols);
+    }
 
     free(dict);
 }
@@ -694,7 +690,9 @@ static jep_huff_tree *create_tree()
     tree = jep_alloc(jep_huff_tree, 1);
 
     if (tree == NULL)
+    {
         return NULL;
+    }
 
     tree->nodes = NULL;
 
@@ -704,7 +702,9 @@ static jep_huff_tree *create_tree()
 static void destroy_tree(jep_huff_tree *tree)
 {
     if (tree == NULL)
+    {
         return;
+    }
 
     jep_huff_node *node = tree->nodes;
     jep_huff_node *next = NULL;
@@ -727,7 +727,9 @@ static jep_huff_code *create_huff_code()
     hc = jep_alloc(jep_huff_code, 1);
 
     if (hc == NULL)
+    {
         return NULL;
+    }
 
     hc->tree = NULL;
     hc->dict = NULL;
@@ -751,9 +753,6 @@ static jep_huff_code *create_huff_code()
 
 static void add_leaf_node(jep_huff_tree *tree, jep_huff_node *node)
 {
-    // This is your run-of-the-mill linked list insertion.
-    // If list is empty, the new node becomes the first node in the list.
-    // If the list is not empty, the new node gets added at the tail.
     if (tree->nodes == NULL)
     {
         tree->nodes = node;
@@ -772,26 +771,26 @@ static void add_leaf_node(jep_huff_tree *tree, jep_huff_node *node)
 static void sort_leaf_nodes(jep_huff_tree *tree)
 {
     if (tree == NULL || tree->nodes == NULL)
+    {
         return;
+    }
 
-    int sorted;           // Whether or not the list is sorted
-    jep_huff_node **node; // The head of the list
-    jep_huff_node *next;  // The next node in the list
+    int sorted;
+    jep_huff_node **node;
+    jep_huff_node *next;
 
     sorted = 0;
 
-    // Attempt to sort the list until it it sorted.
     while (!sorted)
     {
         sorted = 1;
         node = &(tree->nodes);
 
-        // Use bubble sort to sort the list in order
-        // of increasing frequency.
-        // This may be a tremendous source of inefficiency.
+        // Use bubble sort to sort the list in order of increasing frequency.
+        // Yeah, yeah, it's slow. Bite me.
         while (*node != NULL)
         {
-            if ((*node)->next != NULL && (*node)->next->sym.f < (*node)->sym.f)
+            if ((*node)->next != NULL && (*node)->next->sym.freq < (*node)->sym.freq)
             {
                 sorted = 0;
 
@@ -822,55 +821,46 @@ static void sort_leaf_nodes(jep_huff_tree *tree)
 
 static int construct_tree(jep_huff_tree *tree)
 {
-    jep_huff_node **node;     // The current node
-    jep_huff_node *par;       // A parent node for two leaf nodes
-    jep_huff_node *next;      // The next node in the list
-    jep_huff_node *last_next; // The old next node
-    jep_huff_node *new_head;  // The new head of the list
+    jep_huff_node **node;
+    jep_huff_node *parent;
+    jep_huff_node *next;
+    jep_huff_node *last_next;
+    jep_huff_node *new_head;
 
-    // Ensure that we have a tree and that it has leaves.
     if (tree == NULL || tree->nodes == NULL)
+    {
         return 0;
+    }
 
-    // Grab a reference to the first node in the list.
     node = &(tree->nodes);
 
-    // Loop through the list of nodes and
     while (*node != NULL && (*node)->next != NULL)
     {
-        // Initialize the node pointers.
         next = last_next = new_head = NULL;
 
-        // Create a new parent node to represent the sum
-        // of the next two nodes.
-        par = jep_alloc(jep_huff_node, 1);
+        parent = jep_alloc(jep_huff_node, 1);
 
-        if (par == NULL)
-            return 0;
-
-        // The current node and the next node become
-        // leaf 1 and leaf 2 of the new parent node respectively.
-        par->leaf_1 = *node;
-        par->leaf_2 = (*node)->next;
-
-        // Initialize the frequency of the parent node
-        // to be that of the current node.
-        par->sym.f = par->leaf_1->sym.f;
-
-        par->sym.b = 0;
-        par->sym.w = 1;
-        par->sym.n = 1;
-        par->sym.code = NULL;
-        par->next = NULL;
-        par->prev = NULL;
-
-        // If the next node is not NULL,
-        // add its frequency to the parent node's frequency,
-        // and grab a reference to the
-        if (par->leaf_2 != NULL)
+        if (parent == NULL)
         {
-            par->sym.f += par->leaf_2->sym.f;
-            next = par->leaf_2->next;
+            return 0;
+        }
+
+        parent->leaf_1 = *node;
+        parent->leaf_2 = (*node)->next;
+
+        parent->sym.freq = parent->leaf_1->sym.freq;
+
+        parent->sym.byte = 0;
+        parent->sym.weight = 1;
+        parent->sym.depth = 1;
+        parent->sym.code = NULL;
+        parent->next = NULL;
+        parent->prev = NULL;
+
+        if (parent->leaf_2 != NULL)
+        {
+            parent->sym.freq += parent->leaf_2->sym.freq;
+            next = parent->leaf_2->next;
         }
 
         // The parent node should be placed right before the first
@@ -882,40 +872,34 @@ static int construct_tree(jep_huff_tree *tree)
         last_next = next;
         new_head = next;
 
-        // Determine the value of the parent node's "next" pointer.
-        while (next != NULL && next->sym.f < par->sym.f)
+        while (next != NULL && next->sym.freq < parent->sym.freq)
         {
             last_next = next;
             next = next->next;
         }
 
-        par->next = next;
+        parent->next = next;
 
-        // Determine the value of the parent node's "prev" pointer.
         if (next != NULL)
         {
             // The parent node is not the last node.
-            par->prev = next->prev;
+            parent->prev = next->prev;
             if (next->prev != NULL)
             {
-                next->prev->next = par;
+                next->prev->next = parent;
             }
-            next->prev = par;
+            next->prev = parent;
         }
         else if (next == NULL && last_next != NULL)
         {
             // The parent node is the last node.
-            last_next->next = par;
-            par->prev = last_next;
+            last_next->next = parent;
+            parent->prev = last_next;
         }
 
-        // Determine the new value of the current node pointer.
-        // If the parent node was inserted at the head of the list,
-        // then the new current node is the parent node. Otherwise,
-        // the next node in the list becomes the current one.
         if (new_head == NULL || new_head == next)
         {
-            *node = par;
+            *node = parent;
         }
         else
         {
@@ -929,19 +913,19 @@ static int construct_tree(jep_huff_tree *tree)
 
 static jep_huff_tree *reconstruct_tree(jep_huff_dict *dict)
 {
-    uint32_t i;          // Index
-    jep_huff_tree *tree; // A Huffman tree
-    jep_huff_node *root; // The root node of a Huffman tree
-    jep_bitstring *bs;   // The bitstring for a Huffman symbol
-    int res;             // The result of building a branch
+    uint32_t i;
+    jep_huff_tree *tree;
+    jep_huff_node *root;
+    jep_bitstring *bs;
+    int res;
 
-    // Create the tree.
     tree = create_tree();
 
     if (tree == NULL)
+    {
         return NULL;
+    }
 
-    // Create the root node.
     root = create_leaf_node();
 
     if (root == NULL)
@@ -950,14 +934,10 @@ static jep_huff_tree *reconstruct_tree(jep_huff_dict *dict)
         return NULL;
     }
 
-    root->sym.w = 1;
+    root->sym.weight = 1;
 
-    // Add the root node to the tree.
     add_leaf_node(tree, root);
 
-    // Loop through the symbols in the dictionary
-    // and build each branch of the tree based on
-    // the bit code.
     for (i = 0; i < dict->count; i++)
     {
         bs = dict->symbols[i].code;
@@ -969,8 +949,6 @@ static jep_huff_tree *reconstruct_tree(jep_huff_dict *dict)
                            0  // current bit count
         );
 
-        // If we failed to build a branch,
-        // destroy what we've built so far and leave.
         if (!res)
         {
             destroy_tree(tree);
@@ -983,22 +961,22 @@ static jep_huff_tree *reconstruct_tree(jep_huff_dict *dict)
 
 static int assign_bitcodes(jep_huff_tree *tree)
 {
-    jep_huff_node *node; // The root node of the Huffman tree
-    jep_bitstring *bs;   // A bitstring to hold the bit codes
-    int res;             // The result of assigning the bit codes
+    jep_huff_node *node;
+    jep_bitstring *bs;
+    int res;
 
-    // Ensure that the tree exists.
     if (tree == NULL)
+    {
         return 0;
+    }
 
     node = tree->nodes;
 
-    node->sym.n = 0;
+    node->sym.depth = 0;
 
-    // Create the bitstring.
     bs = jep_create_bitstring();
 
-    if (node->sym.w == 0)
+    if (node->sym.weight == 0)
     {
         if (!jep_push_bit(bs, 0))
         {
@@ -1007,10 +985,8 @@ static int assign_bitcodes(jep_huff_tree *tree)
         }
     }
 
-    // Assign the bitcodes to each node of the tree.
     res = assign_bitcode(node, 0, bs);
 
-    // Destroy the bitstring.
     jep_destroy_bitstring(bs);
 
     return res;
@@ -1021,47 +997,48 @@ static int assign_bitcode(
     uint32_t level,
     jep_bitstring *bs)
 {
-    // Ensure that the node actually exists.
     if (node == NULL)
-        return 0;
-
-    // If the weight of the current symbol is less than 1,
-    // add the bits to the symbol's bitstring.
-    if (node->sym.w < 1)
     {
-        node->sym.n = level;
-        if (!jep_concat_bits(node->sym.code, bs))
-            return 0;
+        return 0;
     }
 
-    // If the first leaf exists,
-    // add a bit with the value of 1 to the current bitstring,
-    // make a recursive call to this function to progress to
-    // the next level, then remove the bit.
+    if (node->sym.weight < 1)
+    {
+        node->sym.depth = level;
+        if (!jep_concat_bits(node->sym.code, bs))
+        {
+            return 0;
+        }
+    }
+
     if (node->leaf_1 != NULL)
     {
         jep_push_bit(bs, 1);
 
         if (!assign_bitcode(node->leaf_1, level + 1, bs))
+        {
             return 0;
+        }
 
         if (!jep_pop_bit(bs))
+        {
             return 0;
+        }
     }
 
-    // If the first leaf exists,
-    // add a bit with the value of 0 to the current bitstring,
-    // make a recursive call to this function to progress to
-    // the next level, then remove the bit.
     if (node->leaf_2 != NULL)
     {
         jep_push_bit(bs, 0);
 
         if (!assign_bitcode(node->leaf_2, level + 1, bs))
+        {
             return 0;
+        }
 
         if (!jep_pop_bit(bs))
+        {
             return 0;
+        }
     }
 
     return 1;
@@ -1075,39 +1052,31 @@ static int build_branch(
     uint32_t bit,
     uint32_t bit_count)
 {
-    jep_huff_node **leaf; // The current leaf node
+    jep_huff_node **leaf;
 
-    // If the current bit count matches the number of bits
-    // in the current bitstring, then we've reached the
-    // end of a branch.
     if (bit_count == bs->bit_count)
     {
-        // Create the leaf node if it doesn't already exist.
         if (*node == NULL)
         {
             *node = create_leaf_node();
             if (*node == NULL)
+            {
                 return 0;
+            }
         }
 
-        // Populate the symbol data of the leaf node.
         (*node)->sym = data;
-        (*node)->sym.w = 0;
+        (*node)->sym.weight = 0;
 
         return 1;
     }
 
-    // If we've exceeded the number of bits in a byte,
-    // increment the byte counter and reset the bit counter.
     if (bit == CHAR_BIT)
     {
         byte++;
         bit = 0;
     }
 
-    // If the current bit is a 1, then the next
-    // node in the branch will be leaf_1,
-    // otherwise it will be leaf_2.
     if (bs->bytes[byte] & (1 << bit++))
     {
         leaf = &((*node)->leaf_1);
@@ -1117,18 +1086,18 @@ static int build_branch(
         leaf = &((*node)->leaf_2);
     }
 
-    // Create the next leaf node if it doesn't already exist.
     if (*leaf == NULL)
     {
         *leaf = create_leaf_node();
 
         if (*leaf == NULL)
+        {
             return 0;
+        }
 
-        (*leaf)->sym.w = 1;
+        (*leaf)->sym.weight = 1;
     }
 
-    // Make a recursive call to this function to move to the next node.
     return build_branch(leaf, bs, data, byte, bit, ++bit_count);
 }
 
@@ -1138,182 +1107,143 @@ static int build_branch(
 
 static void write_huff_dict(jep_huff_dict *dict, jep_byte_buffer *bb)
 {
-    uint32_t i, j;      // Indices
-    uint8_t u32buff[4]; // Buffer to hold the bytes of a uint32_t
-    size_t pos;         // Position in the output stream
-    size_t s;           // The size of 1 byte. This should always be 1.
+    uint32_t i, j;
+    uint8_t u32buff[4];
+    size_t pos;
+    size_t size;
 
-    jep_byte b;            // Byte value of the current symbol
-    uint32_t bit_count;    // Number of bits in the bitstring
-    uint32_t byte_count;   // Number of bytes in the bitstring
-    jep_byte current_bits; // Number of occupied bits in the last byte
-    jep_byte *bytes;       // Bytes in the bitstring
+    jep_byte b;
+    uint32_t bit_count;
+    uint32_t byte_count;
+    jep_byte current_bits;
+    jep_byte *bytes;
 
     pos = 0;
-    s = sizeof(jep_byte);
+    size = sizeof(jep_byte);
 
-    // Write the dict_begin metadata to signify the beginning
-    // of a dictionary.
-    write_to_buffer(&dict_begin, bb, s, &pos);
+    write_to_buffer(&dict_begin, bb, size, &pos);
 
-    // Loop through the symbols in the dictionary and write
-    // their data to the output buffer.
-    // Since the bit count and byte count are unsigned 32-bit integers,
-    // we split them into four 8-bit bytes before writing.
     for (i = 0; i < dict->count; i++)
     {
         // Gather the information about the current symbol.
-        b = dict->symbols[i].b;
+        b = dict->symbols[i].byte;
         bit_count = dict->symbols[i].code->bit_count;
         byte_count = dict->symbols[i].code->byte_count;
         current_bits = dict->symbols[i].code->current_bits;
         bytes = dict->symbols[i].code->bytes;
 
-        // Write the dict_byte metadata to signify that
-        // we're about to write the byte value of the
-        // current symbol.
-        // Then, write the symbol's byte value.
-        write_to_buffer(&dict_byte, bb, s, &pos);
+        write_to_buffer(&dict_byte, bb, size, &pos);
         write_to_buffer(&b, bb, 1, &pos);
 
-        // Write the dict_code metadata to signify that
-        // we're about to write bitstring information.
-        write_to_buffer(&dict_code, bb, s, &pos);
+        write_to_buffer(&dict_code, bb, size, &pos);
 
-        // Write the bit count of the bitstring.
         jep_split_u32(bit_count, u32buff);
-        write_to_buffer(u32buff, bb, s * 4, &pos);
+        write_to_buffer(u32buff, bb, size * 4, &pos);
 
-        // Write the byte count of the bitstring.
         jep_split_u32(byte_count, u32buff);
-        write_to_buffer(u32buff, bb, s * 4, &pos);
+        write_to_buffer(u32buff, bb, size * 4, &pos);
 
-        // Write the number of currently occupied bits in
-        // the last byte.
-        write_to_buffer(&current_bits, bb, s, &pos);
+        write_to_buffer(&current_bits, bb, size, &pos);
 
-        // Write the bytes of the bitstring data.
         for (j = 0; j < byte_count; j++)
         {
-            write_to_buffer(&(bytes[j]), bb, s, &pos);
+            write_to_buffer(&(bytes[j]), bb, size, &pos);
         }
     }
 
-    // Write the dict_end metadata to signify that we've finished
-    // writing the dictionary.
     write_to_buffer(&dict_end, bb, sizeof(jep_byte), &pos);
 }
 
 static void write_huff_data(jep_bitstring *data, jep_byte_buffer *bb)
 {
-    uint32_t i;         // Index
-    uint8_t u32buff[4]; // Buffer to hold the bytes of a uint32_t
-    size_t pos;         // Position in the output stream
-    size_t s;           // The size of 1 byte. This should always be 1.
+    uint32_t i;
+    uint8_t u32buff[4];
+    size_t pos;
+    size_t size;
 
-    uint32_t bit_count;    // Number of bits in the bitstring
-    uint32_t byte_count;   // Number of bytes in the bitstring
-    jep_byte current_bits; // Number of occupied bits in the last byte
+    uint32_t bit_count;
+    uint32_t byte_count;
+    jep_byte current_bits;
 
     pos = 0;
-    s = sizeof(jep_byte);
+    size = sizeof(jep_byte);
 
     bit_count = data->bit_count;
     byte_count = data->byte_count;
     current_bits = data->current_bits;
 
-    // Write the data_begin metadata to signify that we're
-    // about to write the encoded bitstring data.
     write_to_buffer(&data_begin, bb, sizeof(jep_byte), &pos);
 
-    // Write the bit count.
     jep_split_u32(bit_count, u32buff);
-    write_to_buffer(u32buff, bb, s * 4, &pos);
+    write_to_buffer(u32buff, bb, size * 4, &pos);
 
-    // Write the byte count.
     jep_split_u32(byte_count, u32buff);
-    write_to_buffer(u32buff, bb, s * 4, &pos);
+    write_to_buffer(u32buff, bb, size * 4, &pos);
 
-    // Write the number of bits occupied in the last byte.
-    write_to_buffer(&current_bits, bb, s, &pos);
+    write_to_buffer(&current_bits, bb, size, &pos);
 
-    // Write the bitstring data.
     for (i = 0; i < data->byte_count; i++)
     {
-        write_to_buffer(&(data->bytes[i]), bb, s, &pos);
+        write_to_buffer(&(data->bytes[i]), bb, size, &pos);
     }
 
-    // Write the data_end metadata to signify that we've finished
-    // writing the data.
-    write_to_buffer(&data_end, bb, s, &pos);
+    write_to_buffer(&data_end, bb, size, &pos);
 }
 
 static jep_huff_dict *read_huff_dict(jep_byte_buffer *data, size_t *pos)
 {
-    jep_huff_dict *dict; // The dictionary to be read from the buffer
-    size_t cap;          // Capacity of the dictionary
-    size_t new_cap;      // New capacity for resizing the dictionary
-    size_t count;        // Number of symbols in the dictionary
-    int res;             // Result of read operations
-    jep_huff_sym sym;    // An individual symbol
-    jep_huff_sym *syms;  // Pointer used for reallocation
-    jep_byte u32buff[4]; // Buffer for holding an unsigned 32-bit integer
-    uint32_t u32;        // An unsigned 32-bit integer
-    jep_byte b;          // An unsigned 8-bit integer
-    size_t s;            // The size of 1 byte. This should always be 1.
+    jep_huff_dict *dict;
+    size_t cap;
+    size_t new_cap;
+    size_t count;
+    int res;
+    jep_huff_sym sym;
+    jep_huff_sym *syms;
+    jep_byte u32buff[4];
+    uint32_t u32;
+    jep_byte byte;
+    size_t size;
 
-    uint32_t bit_count;  // Number of bits in the bitstring
-    uint32_t byte_count; // Number of bytes in the bitstring
-    jep_byte *bytes;     // Bytes in the bitstring
+    uint32_t bit_count;
+    uint32_t byte_count;
+    jep_byte *bytes;
 
     cap = 10;
     dict = create_dict(sizeof(jep_huff_sym) * cap);
     count = 0;
     res = 1;
     u32 = 0;
-    b = 0;
-    s = sizeof(jep_byte);
+    byte = 0;
+    size = sizeof(jep_byte);
 
-    // Ensure that we successfully created the dictionary.
     if (dict == NULL)
+    {
         return NULL;
+    }
 
-    // Read the first byte from the buffer.
-    res = read_from_buffer(&b, data, s, pos);
+    res = read_from_buffer(&byte, data, size, pos);
 
-    // Verify that the first byte is the dict_begin metadata.
-    if (!res || b != dict_begin)
+    if (!res || byte != dict_begin)
     {
         destroy_dict(dict);
         return NULL;
     }
 
-    // As long as there are bytes remaining to be read,
-    // read them from the buffer and insert them into the dictionary.
     while (res)
     {
-        // Read the next byte.
-        res = read_from_buffer(&b, data, s, pos);
+        res = read_from_buffer(&byte, data, size, pos);
 
-        if (res && b == dict_byte)
+        if (res && byte == dict_byte)
         {
-            // If the previous byte was the dict_byte metadata,
-            // then the next byte will be the value of a symbol.
-            if ((res = read_from_buffer(&b, data, s, pos)))
-                sym.b = b;
+            if ((res = read_from_buffer(&byte, data, size, pos)))
+            {
+                sym.byte = byte;
+            }
         }
-        else if (res && b == dict_code)
+        else if (res && byte == dict_code)
         {
-            // If the previous byte was the dict_code metadata,
-            // then the following bytes will be a bistring.
-            // The bit count and byte count are 32-bit
-            // unsigned integers, so they will need to be
-            // reconstructed from a sequence of four bytes.
-
-            // Create the bitstring for the current symbol.
             sym.code = jep_create_bitstring();
 
-            // Ensure that the bitstring was created.
             if (sym.code == NULL)
             {
                 destroy_dict(dict);
@@ -1323,26 +1253,20 @@ static jep_huff_dict *read_huff_dict(jep_byte_buffer *data, size_t *pos)
             // Destroy the bytes since we'll recreate them later.
             free(sym.code->bytes);
 
-            // Read the bit count.
-            res = read_from_buffer(u32buff, data, s * 4, pos);
+            res = read_from_buffer(u32buff, data, size * 4, pos);
             jep_build_u32(u32, u32buff);
             bit_count = u32;
 
-            // Read the byte count.
-            res = read_from_buffer(u32buff, data, s * 4, pos);
+            res = read_from_buffer(u32buff, data, size * 4, pos);
             jep_build_u32(u32, u32buff);
             byte_count = u32;
 
-            // Read the number of bits occupied in the last byte.
-            res = read_from_buffer(&b, data, s, pos);
+            res = read_from_buffer(&byte, data, size, pos);
 
-            // Allocate a new array of bytes.
             bytes = jep_alloc(jep_byte, byte_count);
 
-            // Read the bytes of the bitstring.
             res = read_from_buffer(bytes, data, byte_count, pos);
 
-            // Resize the dictionary if necessary.
             if (count >= cap)
             {
                 new_cap = cap + cap / 2;
@@ -1360,25 +1284,18 @@ static jep_huff_dict *read_huff_dict(jep_byte_buffer *data, size_t *pos)
                 cap = new_cap;
             }
 
-            // Populate members of the symbol structure.
             sym.code->bit_count = bit_count;
             sym.code->byte_count = byte_count;
             sym.code->bytes = bytes;
 
-            // Add the symbol to the dictionary.
             dict->symbols[count++] = sym;
         }
-        else if (b == dict_end)
+        else if (byte == dict_end)
         {
-            // If the previous byte was the dict_end metadata,
-            // break out of the loop.
             res = 0;
         }
     }
 
-    // If we allocated more memory than necessary,
-    // resize the dictionary's symbol array to have
-    // an appropriate length.
     if (count < cap)
     {
         syms = resym(dict->symbols, count);
@@ -1400,47 +1317,38 @@ static jep_huff_dict *read_huff_dict(jep_byte_buffer *data, size_t *pos)
 
 static jep_bitstring *read_huff_data(jep_byte_buffer *data, size_t *pos)
 {
-    jep_bitstring *bs;   // A bitstring to hold the data
-    jep_byte u32buff[4]; // Buffer for holding an unsigned 32-bit integer
-    uint32_t u32;        // An unsigned 32-bit integer
-    jep_byte b;          // An unsigned 8-bit integer
-    size_t s;            // The size of 1 byte. This should always be 1.
+    jep_bitstring *bs;
+    jep_byte u32buff[4];
+    uint32_t u32;
+    jep_byte byte;
+    size_t size;
 
-    // Create the bitstring.
     bs = jep_create_bitstring();
 
     // Dispose of the byte array since it will be created later.
     free(bs->bytes);
 
     u32 = 0;
-    b = 0;
-    // res = 1;
-    s = sizeof(jep_byte);
+    byte = 0;
+    size = sizeof(jep_byte);
 
-    // Read the first byte from the buffer.
-    read_from_buffer(&b, data, s, pos);
+    read_from_buffer(&byte, data, size, pos);
 
-    // Verify that the first byte was the data_begin metadata.
-    if (b == data_begin)
+    if (byte == data_begin)
     {
-        // Read the bit count.
-        read_from_buffer(u32buff, data, s * 4, pos);
+        read_from_buffer(u32buff, data, size * 4, pos);
         jep_build_u32(u32, u32buff);
         bs->bit_count = u32;
 
-        // Read the byte count.
-        read_from_buffer(u32buff, data, s * 4, pos);
+        read_from_buffer(u32buff, data, size * 4, pos);
         jep_build_u32(u32, u32buff);
         bs->byte_count = u32;
 
-        // Read the number of bits occupied in the last byte.
-        read_from_buffer(&b, data, s, pos);
-        bs->current_bits = b;
+        read_from_buffer(&byte, data, size, pos);
+        bs->current_bits = byte;
 
-        // Allocate an array of bytes.
         bs->bytes = jep_alloc(jep_byte, bs->byte_count);
 
-        // Read the bitstring data.
         read_from_buffer(bs->bytes, data, bs->byte_count, pos);
     }
 
@@ -1452,23 +1360,23 @@ static int read_from_buffer(jep_byte *dest,
                             size_t n,
                             size_t *pos)
 {
-    size_t i, j;  // Indices
-    size_t start; // Position in output stream
-    int result;   // Number of bytes written to output buffer
+    size_t i, j;
+    size_t start;
+    int result;
 
-    // Ensure that the source and destination are not NULL.
     if (src == NULL || src->buffer == NULL || dest == NULL)
+    {
         return 0;
+    }
 
     start = *pos;
     result = 0;
 
-    // Ensure that the current position is less than
-    // the source size.
     if (*pos >= src->size)
+    {
         return 0;
+    }
 
-    // Copy each byte from the source buffer into the destination array.
     for (i = start, j = 0; i < start + n && i < src->size; i++)
     {
         dest[j++] = src->buffer[i];
@@ -1484,21 +1392,21 @@ static int write_to_buffer(const jep_byte *src,
                            size_t n,
                            size_t *pos)
 {
-    size_t i;   // Index
-    int result; // Number of bytes written to output buffer
+    size_t i;
+    int result;
 
-    // Ensure that the source and destination are not NULL.
     if (dest == NULL || dest->buffer == NULL || src == NULL)
+    {
         return 0;
+    }
 
     result = 0;
 
-    // Ensure that the current position is not greater
-    // than the size of the destination buffer.
     if (*pos > dest->size)
+    {
         return 0;
+    }
 
-    // Copy each byte from the source array into the destination buffer.
     for (i = 0; i < n; i++)
     {
         jep_append_byte(dest, src[i]);

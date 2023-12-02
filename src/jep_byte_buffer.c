@@ -8,7 +8,9 @@ jep_byte_buffer *jep_create_byte_buffer()
     bb = (jep_byte_buffer *)malloc(sizeof(jep_byte_buffer));
 
     if (bb == NULL)
+    {
         return NULL;
+    }
 
     size_t cap = 50;
 
@@ -28,10 +30,14 @@ jep_byte_buffer *jep_create_byte_buffer()
 void jep_destroy_byte_buffer(jep_byte_buffer *bb)
 {
     if (bb == NULL)
+    {
         return;
+    }
 
     if (bb->buffer != NULL)
+    {
         free(bb->buffer);
+    }
 
     free(bb);
 }
@@ -39,7 +45,9 @@ void jep_destroy_byte_buffer(jep_byte_buffer *bb)
 int jep_append_byte(jep_byte_buffer *bb, jep_byte b)
 {
     if (bb == NULL || bb->buffer == NULL)
+    {
         return 0;
+    }
 
     if (bb->size >= bb->cap)
     {
@@ -47,7 +55,9 @@ int jep_append_byte(jep_byte_buffer *bb, jep_byte b)
         jep_byte *buffer = (jep_byte *)realloc(bb->buffer, new_cap);
 
         if (buffer == NULL)
+        {
             return -1;
+        }
 
         bb->buffer = buffer;
         bb->cap = new_cap;
@@ -73,9 +83,13 @@ int jep_append_bytes(jep_byte_buffer *bb, jep_byte *b, int n)
     {
         int next_result = jep_append_byte(bb, b[i]);
         if (next_result > 0)
+        {
             result += next_result;
+        }
         else
+        {
             return next_result;
+        }
     }
 
     return result;
@@ -84,10 +98,14 @@ int jep_append_bytes(jep_byte_buffer *bb, jep_byte *b, int n)
 void jep_remove_byte_at(jep_byte_buffer *bb, size_t index)
 {
     if (bb == NULL || bb->buffer == NULL || bb->size == 0)
+    {
         return;
+    }
 
     if (index >= bb->size)
+    {
         return;
+    }
 
     int removed = 0;
     size_t i;
@@ -97,20 +115,28 @@ void jep_remove_byte_at(jep_byte_buffer *bb, size_t index)
         if (removed)
         {
             if (i > 0)
+            {
                 bb->buffer[i - 1] = bb->buffer[i];
+            }
 
             if (i == bb->size - 1)
+            {
                 bb->buffer[i] = 0;
+            }
         }
 
         if (i == index)
+        {
             removed = 1;
+        }
     }
 
     if (removed)
     {
         if (bb->size == 1)
+        {
             bb->buffer[0] = 0;
+        }
 
         bb->size--;
     }
@@ -119,7 +145,9 @@ void jep_remove_byte_at(jep_byte_buffer *bb, size_t index)
 int jep_clear_byte_buffer(jep_byte_buffer *bb)
 {
     if (bb == NULL || bb->buffer == NULL || bb->size == 0)
+    {
         return 0;
+    }
 
     free(bb->buffer);
     bb->buffer = NULL;
@@ -128,7 +156,9 @@ int jep_clear_byte_buffer(jep_byte_buffer *bb)
     jep_byte *buffer = (jep_byte *)malloc(sizeof(jep_byte));
 
     if (buffer == NULL)
+    {
         return 0;
+    }
 
     bb->buffer = buffer;
 

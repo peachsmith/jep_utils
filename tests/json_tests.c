@@ -16,7 +16,9 @@ int json_parse_test()
     jobj = NULL;
 
     if (jstr == NULL)
+    {
         return 0;
+    }
 
     parsed = jep_parse_json_string(jstr, &jobj);
 
@@ -84,7 +86,9 @@ int json_field_test()
         data = jfield->value->data.raw;
 
         if (data->chars[0] != 0x62 || data->chars[1] != 0x61 || data->chars[2] != 0x67 || data->chars[3] != 0x65 || data->chars[4] != 0x6C)
+        {
             res = 0;
+        }
     }
 
     jep_destroy_string(jstr);
@@ -245,12 +249,16 @@ int json_nested_field_test()
                           "     }                                    "
                           "   }                                      "
                           " }                                        ");
-    arr_str = jep_new_string("array");
-    obj_str = jep_new_string("object");
+    arr_str = jep_new_string("arrayField");
+    obj_str = jep_new_string("objectField");
     jobj = NULL;
 
     if (jstr == NULL)
+    {
         return 0;
+    }
+
+    int res = 1;
 
     parsed = jep_parse_json_string(jstr, &jobj);
 
@@ -260,9 +268,31 @@ int json_nested_field_test()
         return 0;
     }
 
-    // arr_field = jep_get_json_field(jobj, arr_str);
-    // obj_field = jep_get_json_field(jobj, obj_str);
+    if (parsed)
+    {
+        res = 0;
+    }
 
+    arr_field = jep_get_json_field(jobj, arr_str);
+
+    if (arr_field->value->type != JSON_VALUE_ARRAY)
+    {
+        res = 0;
+    }
+
+    if (arr_field->value->data.arr->values->type != JSON_VALUE_NUMBER)
+    {
+        res = 0;
+    }
+
+    const char *e0 = jep_c_str(arr_field->value->data.arr->values->data.raw);
+
+    if (e0[0] != '4')
+    {
+        res = 0;
+    }
+
+    // TODO: remove this from this project and put it somewhere more appropriate.
     print_json_object(jobj, 0, 0, 0);
 
     jep_destroy_string(jstr);
@@ -271,6 +301,5 @@ int json_nested_field_test()
 
     jep_destroy_json_object(jobj);
 
-    // jep_parse_json_string returns 0 on success
-    return !parsed;
+    return res;
 }
