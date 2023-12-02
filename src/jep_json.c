@@ -1608,11 +1608,17 @@ static jep_json_object *parse_json(jep_json_token **tokens, int parse_type, jep_
                 v = create_json_value();
 
                 if (t->type == JSON_TOKEN_NUMBER)
+                {
                     v->type = JSON_VALUE_NUMBER;
+                }
                 else if (t->type == JSON_TOKEN_BOOLEAN)
+                {
                     v->type = JSON_VALUE_BOOLEAN;
+                }
                 else if (t->type == JSON_TOKEN_NULL)
+                {
                     v->type = JSON_VALUE_NULL;
+                }
 
                 raw = jep_create_string(0);
 
